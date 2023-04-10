@@ -18,6 +18,8 @@ def download_file(url, params={}):
             print(error)
             return False
 
+        print(response.headers)
+
         d = response.headers["content-disposition"]
         fname = re.findall("filename=(.+)", d)[0]
         filepath = f"./{fname}" if fname else "./download"

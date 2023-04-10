@@ -1,33 +1,14 @@
-# -*- coding: utf-8 -*-
 #!/bin/python3
 
+from io import StringIO
+import json
+import sys
 
 from odoo_analyse import Odoo
 
 
-# def to_json(module):
-#     return {
-#         "path": module.path,
-#         "name": module.name,
-#         "manifest": module.manifest,
-#         "models": {n: m.to_json() for n, m in module.models.items()},
-#         "views": {n: v.to_json() for n, v in module.views.items()},
-#         "data": module.data,
-#         "depends": list(module.depends),
-#         "imports": list(module.imports),
-#         "refers": list(module.refers),
-#         "files": list(module.files),
-#         "status": list(module.status),
-#         "language": module.language,
-#         "words": list(module.words),
-#         "hashsum": module.hashsum,
-#         "readme": bool(module.readme),
-#         "readme_type": module.readme_type,
-#     }
-
-
-def to_json(self):
-    return {
+def to_json_patched(self):
+    data = {
         "path": self.path,
         "name": self.name,
         "duration": self.duration,
@@ -46,20 +27,35 @@ def to_json(self):
         "hashsum": self.hashsum,
         "readme": bool(self.readme),
         "readme_type": self.readme_type,
+        "author": self.author,
+        "category": self.category,
+        "license": self.license,
+        "version": self.version,
+        "info": self.info,
     }
+    if self.manifest and "data" in self.manifest:
+        data["manifest"]["data"] = list(data["manifest"]["data"])
+
+    return data
 
 
 def run_odoo_analyse(path, exclude=[]):
     odoo = Odoo.from_path(path)
 
-    # data = odoo.save_json("-")
-    # data = json.dumps(data)
+    output = StringIO()
 
-    # Call json dumps because save_json last character return is None or null value
-    # data = json.dumps({k: m.to_json() for k, m in odoo.full.items()})
+    # Capture stdout to buffer
+    sys.stdout = output
+    odoo.analyse("-")
+    sys.stdout = sys.__stdout__
 
-    # data = {k: m.to_json() for k, m in odoo.full.items()}
-    data = {k: to_json(m) for k, m in odoo.full.items()}
+    data = json.loads(output.getvalue())
+
+    # data = {k: to_json_patched(m) for k, m in odoo.full.items()}
+
+    for name in data.keys():
+        vals = to_json_patched(odoo.modules[name])
+        data[name].update(vals)
 
     modules = sorted([name for name, obj in odoo.items() if name not in exclude])
 
