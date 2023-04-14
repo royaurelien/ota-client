@@ -2,13 +2,10 @@
 #!/bin/python3
 
 from collections import namedtuple
-from datetime import datetime
-import logging
-import json
 import os
-import requests
-import time
 from pathlib import Path
+
+from ota.core.tools import save_to_json, read_from_json
 
 Options = namedtuple("Options", ["url", "authenable", "authmethod"])
 
@@ -17,18 +14,6 @@ DEFAULT_OPTIONS = {
     "authenable": False,
     "authmethod": False,
 }
-
-
-def read_from_json(path):
-    with open(path, "r") as file:
-        data = json.loads(file.read())
-
-    return data
-
-
-def save_to_json(path, data):
-    with open(path, "w") as file:
-        file.write(json.dumps(data))
 
 
 class Config(object):
@@ -57,7 +42,6 @@ class Config(object):
         save_to_json(self._path, data)
 
     def load(self):
-
         if not os.path.exists(self._path):
             raise FileNotFoundError
 
@@ -66,4 +50,5 @@ class Config(object):
         self.options = Options(**data)
 
     def set_value(self, name, value):
-        self.options[name] = value
+        # self.options[name] = value
+        raise NotImplementedError()

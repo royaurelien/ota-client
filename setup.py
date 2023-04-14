@@ -18,6 +18,8 @@ setup(
         "sh",
         "cloc",
         "mccabe",
+        "rich",
+        "tabulate",
     ],
     extras_require={"graph": ["graphviz", "psycopg2"]},
     entry_points={
