@@ -11,6 +11,7 @@ COLUMNS = Columns(
     integer={"justify": "center", "style": "green"},
     primary_integer={"justify": "center", "style": "red"},
     name={"style": "magenta", "no_wrap": True},
+    text_right={"justify": "right", "style": "blue", "no_wrap": False},
 )
 
 # DEFAULT_OPTIONS = {

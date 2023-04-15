@@ -3,7 +3,7 @@ from collections import namedtuple
 from pydantic import BaseModel
 from typing import Tuple
 
-Columns = namedtuple("Columns", ["name", "integer", "primary_integer"])
+Columns = namedtuple("Columns", ["name", "integer", "primary_integer", "text_right"])
 
 Options = namedtuple("Options", ["url", "auth_enable", "auth_method"])
 

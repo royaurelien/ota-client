@@ -55,6 +55,7 @@ class Odoo(OOdoo):
 
             linter[name] = run_pylint_once(data[name]["path"])
             data[name]["score"] = linter[name].get("score", 0)
+            data[name].update(linter[name].get("code_report", {}))
 
         return data, linter
 

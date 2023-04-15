@@ -27,6 +27,11 @@ def stats(path, modules=None, **kwargs):
         "PY",
         "XML",
         "JS",
+        # "code",
+        "comment",
+        "docstring",
+        # "empty",
+        # "total",
         # "missing",
         # "missing_dependency",
         # "language",
@@ -74,6 +79,7 @@ def stats(path, modules=None, **kwargs):
             "category": COLUMNS.name,
             "column": COLUMNS.integer,
             "line": COLUMNS.primary_integer,
+            "msg": COLUMNS.text_right,
         }
 
         console.print(

@@ -229,3 +229,16 @@ def dataframe_to_table(df, title, columns, **kwargs):
 #         values = [str(v) for k, v in vals.items() if k in columns]
 #         print(values)
 #         table.add_row(*values)
+
+
+class JSONSetEncoder(json.JSONEncoder):
+    """Custom JSON Encoder to transform python sets into simple list"""
+
+    def default(self, o):  # pylint: disable=E0202
+        if isinstance(o, set):
+            return list(o)
+        return super(JSONSetEncoder, self).default(o)
+
+
+def json_dump(data):
+    return json.dumps(data, cls=JSONSetEncoder, indent=2)

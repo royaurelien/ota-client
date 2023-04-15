@@ -13,6 +13,7 @@ from pylint.reporters import JSONReporter
 import pandas as pd
 
 from ota.core.console import console
+from ota.tools.linter import JsonExtendedReporter
 
 logging.basicConfig(filename="error.log", level=logging.DEBUG)
 
@@ -75,23 +76,33 @@ def run_pylint(path, modules):
 
 
 def run_pylint_once(path):
-    # name = os.path.basename(path)
+    name = os.path.basename(path)
 
     out_stream = StringIO()
     quiet_reporter = JSONReporter()
     quiet_reporter.set_output(out_stream)
 
-    results = Run([path], reporter=quiet_reporter, do_exit=False)
+    results = Run([path, "-ry"], reporter=quiet_reporter, do_exit=False)
 
     stats = results.linter.stats
     messages = pd.DataFrame(quiet_reporter.messages)
     # console.print(messages)
+
+    df = pd.DataFrame({name: stats.code_type_count}).transpose()
+    df1 = df.copy()
+
+    for key in ["code", "comment", "docstring", "empty"]:
+        df1[key] = round(df1[key] * 100 / df1["total"], 2)
+
+    code = df1.to_dict(orient="records")[0]
+    # console.print(code)
 
     vals = {
         "score": round_float(stats.global_note),
         "by_module": _prepare_stats(stats),
         "stats": stats.by_msg,
         "messages": messages,
+        "code_report": code,
     }
 
     return vals
