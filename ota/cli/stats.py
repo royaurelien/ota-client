@@ -1,7 +1,6 @@
 import click
 
-
-from ota.core.console import console, COLUMNS
+from ota.core.console import console, Panel, COLUMNS
 from ota.core.tools import dataframe_to_table
 from ota.core.parser import Parser
 
@@ -12,9 +11,8 @@ from ota.core.parser import Parser
 def stats(path, modules=None, **kwargs):
     with console.status("Working..."):
         parser = Parser.from_path(path, modules)
-        df = parser.analyze()
+        df, linter = parser.analyze()
 
-    count = 0
     selection = [
         "name",
         "author",
@@ -37,7 +35,6 @@ def stats(path, modules=None, **kwargs):
         "depends",
     ]
     df = df[selection]
-    df = df.astype(str)
 
     options = {
         "name": COLUMNS.name,
@@ -55,8 +52,44 @@ def stats(path, modules=None, **kwargs):
     console.print(
         dataframe_to_table(
             df,
-            f"Modules ({count})",
+            f"Modules ({len(df)})",
             selection,
             column_options=options,
         )
     )
+
+    # Only one module, show linter messages
+    if len(linter.keys()) == 1:
+        linter = linter[next(iter(linter))]
+        df = linter["messages"]
+
+        selection = ["line", "column", "category", "msg_id", "symbol", "module", "msg"]
+
+        duplicate_code = df[(df["symbol"] == "duplicate-code")]
+
+        df.drop(duplicate_code.index, inplace=True)
+        df.sort_values(["module", "line"], ascending=True, inplace=True)
+
+        options = {
+            "category": COLUMNS.name,
+            "column": COLUMNS.integer,
+            "line": COLUMNS.primary_integer,
+        }
+
+        console.print(
+            dataframe_to_table(
+                df,
+                f"Messages ({len(df)})",
+                selection,
+                column_options=options,
+            )
+        )
+
+        if not duplicate_code.empty:
+            console.print(
+                Panel.fit(
+                    f"Duplicates code ({len(duplicate_code)})", border_style="red"
+                )
+            )
+            for code in duplicate_code["msg"].values:
+                console.print(code)

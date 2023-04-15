@@ -196,6 +196,7 @@ def send_analysis(url, data):
 def dataframe_to_table(df, title, columns, **kwargs):
     table = Table(title=title)
     df = df[columns]
+    df = df.astype(str)
 
     options = kwargs.get("column_options", {})
 

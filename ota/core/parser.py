@@ -45,7 +45,7 @@ class Parser(object):
         return self
 
     def analyze(self):
-        data = self._odoo.export()
+        data, linter = self._odoo.export()
 
         df = pd.DataFrame(data).transpose()
 
@@ -64,4 +64,4 @@ class Parser(object):
 
         df.sort_values("name", ascending=True, inplace=True)
 
-        return df
+        return df, linter

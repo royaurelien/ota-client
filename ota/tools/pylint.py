@@ -4,12 +4,15 @@
 import logging
 import os
 from io import StringIO
-
+import sys
 
 from pylint import __version__ as pylint_version
 from pylint.lint import Run
 from pylint.reporters.text import TextReporter
+from pylint.reporters import JSONReporter
+import pandas as pd
 
+from ota.core.console import console
 
 logging.basicConfig(filename="error.log", level=logging.DEBUG)
 
@@ -74,16 +77,21 @@ def run_pylint(path, modules):
 def run_pylint_once(path):
     # name = os.path.basename(path)
 
-    pylint_output = StringIO()
-    reporter = TextReporter(pylint_output)
-    results = Run([path], reporter=reporter, exit=False)
+    out_stream = StringIO()
+    quiet_reporter = JSONReporter()
+    quiet_reporter.set_output(out_stream)
+
+    results = Run([path], reporter=quiet_reporter, do_exit=False)
 
     stats = results.linter.stats
-    # output = pylint_output.getvalue()
+    messages = pd.DataFrame(quiet_reporter.messages)
+    # console.print(messages)
 
     vals = {
+        "score": round_float(stats.global_note),
         "by_module": _prepare_stats(stats),
-        "messages": stats.by_msg,
+        "stats": stats.by_msg,
+        "messages": messages,
     }
 
     return vals

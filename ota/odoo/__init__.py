@@ -44,6 +44,7 @@ class Odoo(OOdoo):
         sys.stdout = sys.__stdout__
 
         data = json.loads(output.getvalue())
+        linter = dict()
 
         for name in data.keys():
             vals = self.modules[name].to_json()
@@ -52,13 +53,10 @@ class Odoo(OOdoo):
             x = data[name].setdefault("missing_dependency", {})
             # data[name]["missing_dependency"] = x
 
-            # console.print(data[name].keys())
+            linter[name] = run_pylint_once(data[name]["path"])
+            data[name]["score"] = linter[name].get("score", 0)
 
-            linter = run_pylint_once(data[name]["path"])
-            data[name]["score"] = linter["by_module"].get("score", 0)
-            # console.print(linter)
-
-        return data
+        return data, linter
 
     def filter_on_database(self):
         names = []
