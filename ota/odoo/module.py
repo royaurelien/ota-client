@@ -7,10 +7,10 @@ import logging
 from collections import namedtuple
 
 
-from omg.odoo import OdooModule
-from omg.odoo.model import Model
-from omg.core.tools import generate
-from omg.core.models import File
+from ota.odoo import OdooModule
+from ota.odoo.model import Model
+from ota.core.tools import generate
+from ota.core.models import File
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 

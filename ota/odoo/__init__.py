@@ -13,9 +13,12 @@ from odoo_analyse import Model as OdooModel
 from odoo_analyse.field import Field as OdooField
 from odoo_analyse.utils import get_ast_source_segment
 
-from omg.odoo.module import Module
-from omg.odoo.model import Model
-from omg.odoo.field import Field
+from ota.odoo.module import Module
+from ota.odoo.model import Model
+from ota.odoo.field import Field
+
+from ota.core.console import console
+from ota.tools.pylint import run_pylint_once
 
 _logger = logging.getLogger(__name__)
 
@@ -48,6 +51,12 @@ class Odoo(OOdoo):
 
             x = data[name].setdefault("missing_dependency", {})
             # data[name]["missing_dependency"] = x
+
+            # console.print(data[name].keys())
+
+            linter = run_pylint_once(data[name]["path"])
+            data[name]["score"] = linter["by_module"].get("score", 0)
+            # console.print(linter)
 
         return data
 

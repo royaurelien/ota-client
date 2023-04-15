@@ -3,9 +3,14 @@ from collections import namedtuple
 from pydantic import BaseModel
 from typing import Tuple
 
-Columns = namedtuple("Columns", ["name", "integer"])
+Columns = namedtuple("Columns", ["name", "integer", "primary_integer"])
 
 Options = namedtuple("Options", ["url", "auth_enable", "auth_method"])
+
+File = namedtuple(
+    "File",
+    ["name", "path", "content"],
+)
 
 
 class Analysis(BaseModel):

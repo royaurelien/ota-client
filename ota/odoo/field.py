@@ -3,8 +3,8 @@
 
 import logging
 
-from omg.odoo import OdooField
-from omg.core.tools import dict_to_list
+from ota.odoo import OdooField
+from ota.core.tools import dict_to_list
 
 _logger = logging.getLogger(__name__)
 

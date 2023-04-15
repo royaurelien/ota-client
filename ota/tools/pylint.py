@@ -69,3 +69,21 @@ def run_pylint(path, modules):
         vals["messages"][name] = stats.by_msg
 
     return vals
+
+
+def run_pylint_once(path):
+    # name = os.path.basename(path)
+
+    pylint_output = StringIO()
+    reporter = TextReporter(pylint_output)
+    results = Run([path], reporter=reporter, exit=False)
+
+    stats = results.linter.stats
+    # output = pylint_output.getvalue()
+
+    vals = {
+        "by_module": _prepare_stats(stats),
+        "messages": stats.by_msg,
+    }
+
+    return vals

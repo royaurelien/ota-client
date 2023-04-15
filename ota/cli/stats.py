@@ -33,6 +33,7 @@ def stats(path, modules=None, **kwargs):
         # "missing_dependency",
         # "language",
         # "duration",
+        "score",
         "depends",
     ]
     df = df[selection]
@@ -48,6 +49,7 @@ def stats(path, modules=None, **kwargs):
         "PY": COLUMNS.integer,
         "XML": COLUMNS.integer,
         "JS": COLUMNS.integer,
+        "score": COLUMNS.primary_integer,
     }
 
     console.print(
