@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-#!/bin/python3
+#!/usr/bin/env python3
 
-import os
 import logging
-import shutil
-from io import StringIO
-import sys
-import json
 
+import pandas as pd
+import numpy as np
 
 from ota.odoo import Odoo
 
@@ -33,6 +29,12 @@ class Parser(object):
 
         odoo = Odoo.from_path(path)
 
+        # Apply the filter
+        if modules:
+            odoo.modules = {
+                name: module for name, module in odoo.items() if name in modules
+            }
+
         for k, v in odoo.modules.items():
             if modules and v.name not in modules:
                 continue
@@ -43,13 +45,23 @@ class Parser(object):
         return self
 
     def analyze(self):
-        output = StringIO()
+        data = self._odoo.export()
 
-        # Capture stdout to buffer
-        sys.stdout = output
-        self._odoo.analyse("-")
-        sys.stdout = sys.__stdout__
+        df = pd.DataFrame(data).transpose()
 
-        data = json.loads(output.getvalue())
+        df["missing"] = np.where(df["missing_dependency"].isnull(), False, True)
+        df["missing_dependency"] = df["missing_dependency"].apply(
+            lambda row: ", ".join(row) if isinstance(row, list) else row
+        )
+        df["depends"] = df["depends"].apply(
+            lambda row: ", ".join(sorted(row)) if isinstance(row, list) else row
+        )
+        df["language"] = df["language"].apply(
+            lambda row: ", ".join([f"{k}: {v}" for k, v in row.items()])
+        )
+        df["missing_dependency"] = df["missing_dependency"].fillna("")
+        df = df.replace([0], "-")
 
-        return data
+        df.sort_values("name", ascending=True, inplace=True)
+
+        return df

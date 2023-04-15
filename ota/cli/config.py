@@ -3,11 +3,13 @@
 import click
 
 
-from ota.core.config import Config
-from ota.core.console import console, dataframe_to_table
+from ota.core.settings import get_settings
+from ota.core.console import console
+
+# from ota.core.tools import dataframe_to_table
 
 
-settings = Config()
+settings = get_settings()
 
 
 @click.command()
@@ -22,10 +24,7 @@ def set_value(name, value, **kwargs):
 @click.argument("name")
 def get_value(name, **kwargs):
     """Get settings value"""
-    try:
-        value = getattr(settings.options, name)
-    except AttributeError:
-        value = f"Unknown variable '{name}'"
+    value = settings.get_value(name)
     console.print(value)
 
 
@@ -35,7 +34,7 @@ def view(**kwargs):
     # for k, v in settings.options._asdict().items():
     #     print(f"{k}: {v}".format(k, v))
 
-    console.print(settings.options._asdict())
+    console.print(settings)
 
 
 @click.group()

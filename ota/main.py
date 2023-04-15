@@ -2,7 +2,9 @@
 
 import click
 
-from ota.core.config import Config
+from ota.core.settings import get_settings
+
+settings = get_settings()
 
 # from ota.core.console import console, dataframe_to_table
 from ota.cli.inspect import inspect
@@ -11,8 +13,6 @@ from ota.cli.analyze import analyze, send, download
 from ota.cli.stats import stats
 
 LOCAL_URL = "http://0.0.0.0:8080"
-
-settings = Config()
 
 
 @click.group()

@@ -4,7 +4,8 @@ import click
 import pandas as pd
 
 from ota.tools.rpc import OdooRpc, DEFAULT_MODELS
-from ota.core.console import console, dataframe_to_table
+from ota.core.console import console
+from ota.core.tools import dataframe_to_table
 
 LOCAL_URL = "http://0.0.0.0:8080"
 

@@ -3,16 +3,16 @@
 import click
 
 
-from ota.core.config import Config
+from ota.core.settings import get_settings
 from ota.core.analyze import Analyze
-from ota.core.net import download_file, urljoin
+from ota.core.tools import download_file, urljoin, dataframe_to_table
 
-from ota.core.console import console, dataframe_to_table
+from ota.core.console import console
 
 
 LOCAL_URL = "http://0.0.0.0:8080"
 
-settings = Config()
+settings = get_settings()
 
 
 @click.group()

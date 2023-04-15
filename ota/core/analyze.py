@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 #!/bin/python3
 
-from collections import namedtuple
+
 from datetime import datetime
-import logging
 import json
 import os
-import requests
 import time
 
 from ota.tools.cloc import run_cloc
 from ota.tools.odoo import run_odoo_analyse
 from ota.tools.pylint import run_pylint, pylint_version
 
-from ota.core.net import send_analysis
+from ota.core.tools import send_analysis
 
 
 class Analyze(object):
