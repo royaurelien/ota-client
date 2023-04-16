@@ -68,7 +68,7 @@ def stats(path, modules=None, **kwargs):
         linter = linter[next(iter(linter))]
         df = linter["messages"]
 
-        selection = ["line", "column", "category", "msg_id", "symbol", "module", "msg"]
+        selection = ["module", "line", "column", "category", "msg_id", "symbol", "msg"]
 
         duplicate_code = df[(df["symbol"] == "duplicate-code")]
 
@@ -76,10 +76,13 @@ def stats(path, modules=None, **kwargs):
         df.sort_values(["module", "line"], ascending=True, inplace=True)
 
         options = {
-            "category": COLUMNS.name,
+            "module": COLUMNS.name,
             "column": COLUMNS.integer,
             "line": COLUMNS.primary_integer,
             "msg": COLUMNS.text_right,
+            "category": COLUMNS.text_center,
+            "msg_id": COLUMNS.text_center,
+            "symbol": COLUMNS.text_center,
         }
 
         console.print(

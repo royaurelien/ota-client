@@ -5,88 +5,55 @@ import click
 
 from ota.core.settings import get_settings
 from ota.core.analyze import Analyze
-from ota.core.tools import download_file, urljoin, dataframe_to_table
+from ota.core.tools import str_to_list, get_folder_name
 
 from ota.core.console import console
 
 
-LOCAL_URL = "http://0.0.0.0:8080"
-
 settings = get_settings()
-
-
-@click.group()
-def cli():
-    """Odoo Technical Analysis"""
 
 
 @click.command()
 @click.argument("path")
-@click.argument("name")
+@click.option("--name", "-n", default=None, type=str, help="Report name")
 @click.option("--save", "-s", is_flag=True, default=False, type=bool, help="Save")
 @click.option("--output", "-o", default="report.json", help="Create blank project")
 @click.option("--exclude", "-e", default=None, type=str, help="Exclude")
-def analyze(path, name, save, exclude, output):
+@click.option("--modules", "-m", default=None, type=str, help="Modules")
+def analyze(path, name, save, exclude, modules, output):
     """Analyze modules on path"""
 
-    options = {}
+    modules = str_to_list(modules)
+    exclude = str_to_list(exclude)
 
-    if exclude and isinstance(exclude, str):
-        exclude = list(map(str.strip, exclude.split(",")))
-        options["exclude"] = exclude
+    if not name:
+        name = get_folder_name(path)
 
-    analysis = Analyze(path=path, name=name, **options)
-    analysis.run()
+    analysis = Analyze(
+        path=path,
+        name=name,
+        modules=modules,
+        exclude=exclude,
+    )
+    analysis.scan_path()
 
-    if save and output:
-        analysis.save(output)
+    if not analysis.has_modules:
+        console.log("Path does not contain any Odoo modules.")
+        exit(1)
 
+    console.log(f"{analysis.modules_count} module(s) found.")
 
-@click.command()
-@click.argument("file")
-@click.option(
-    "--local", "-l", is_flag=True, default=False, type=bool, help="Send to local server"
-)
-def send(file, **kwargs):
-    """Send report"""
-    local_send = kwargs.get("local", False)
+    analysis.count_lines_of_code()
+    console.print(analysis.stats.get_dataframe())
 
-    analysis = Analyze()
-    analysis.load(file)
+    # options = {}
 
-    base_url = settings.options.url if not local_send else LOCAL_URL
-    url = urljoin(base_url, "/v1/analyze")
-    analysis.send(url)
+    # if exclude and isinstance(exclude, str):
+    #     exclude = list(map(str.strip, exclude.split(",")))
+    #     options["exclude"] = exclude
 
+    # analysis = Analyze(path=path, name=name, **options)
+    # analysis.run()
 
-@click.command()
-@click.argument("id")
-@click.argument("format")
-@click.option(
-    "--local",
-    "-l",
-    is_flag=True,
-    default=False,
-    type=bool,
-    help="Download from local server",
-)
-@click.option(
-    "--template",
-    "-t",
-    default=False,
-    type=str,
-    help="Template",
-)
-def download(id, format, **kwargs):
-    """Download report"""
-
-    local_download = kwargs.get("local", False)
-    base_url = settings.options.url if not local_download else LOCAL_URL
-    url = urljoin(base_url, f"/v1/report/{id}")
-
-    params = dict(ttype=format)
-    template = kwargs.get("template")
-    if template:
-        params["template"] = template
-
-    download_file(url, params)
+    # if save and output:
+    #     analysis.save(output)

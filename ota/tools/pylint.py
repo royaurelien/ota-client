@@ -86,7 +86,11 @@ def run_pylint_once(path):
 
     stats = results.linter.stats
     messages = pd.DataFrame(quiet_reporter.messages)
-    # console.print(messages)
+
+    # module.models.model --> models / model
+    messages["module"] = messages["module"].apply(
+        lambda row: " / ".join(row.split(".")[-2:])
+    )
 
     df = pd.DataFrame({name: stats.code_type_count}).transpose()
     df1 = df.copy()

@@ -242,3 +242,14 @@ class JSONSetEncoder(json.JSONEncoder):
 
 def json_dump(data):
     return json.dumps(data, cls=JSONSetEncoder, indent=2)
+
+
+def str_to_list(string):
+    """Transform string to list"""
+    if not string:
+        return []
+    return list(set(map(str.strip, string.split(","))))
+
+
+def get_folder_name(path):
+    return os.path.basename(path)

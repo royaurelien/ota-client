@@ -7,8 +7,6 @@ from ota.tools.rpc import OdooRpc, DEFAULT_MODELS
 from ota.core.console import console
 from ota.core.tools import dataframe_to_table
 
-LOCAL_URL = "http://0.0.0.0:8080"
-
 
 @click.command()
 @click.argument("database")
@@ -126,25 +124,3 @@ def inspect(database, host, user, password, local):
             column_options=options,
         )
     )
-
-
-@click.command()
-@click.argument("path")
-@click.argument("name")
-@click.option("--save", "-s", is_flag=True, default=False, type=bool, help="Save")
-@click.option("--output", "-o", default="report.json", help="Create blank project")
-@click.option("--exclude", "-e", default=None, type=str, help="Exclude")
-def analyze(path, name, save, exclude, output):
-    """Analyze modules on path"""
-
-    options = {}
-
-    if exclude and isinstance(exclude, str):
-        exclude = list(map(str.strip, exclude.split(",")))
-        options["exclude"] = exclude
-
-    analysis = Analyze(path=path, name=name, **options)
-    analysis.run()
-
-    if save and output:
-        analysis.save(output)

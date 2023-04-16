@@ -4,15 +4,15 @@ import click
 
 from ota.core.settings import get_settings
 
-settings = get_settings()
+settings = get_settings()  # pylint: disable=C0413
 
 # from ota.core.console import console, dataframe_to_table
 from ota.cli.inspect import inspect
 from ota.cli.config import config
-from ota.cli.analyze import analyze, send, download
+from ota.cli.analyze import analyze
+from ota.cli.send import send
+from ota.cli.download import download
 from ota.cli.stats import stats
-
-LOCAL_URL = "http://0.0.0.0:8080"
 
 
 @click.group()

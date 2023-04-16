@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     version: str = "0.1.0"
 
     url: str = "http://127.0.0.1:8080"
+    local_url: str = "http://0.0.0.0:8080"
     auth_enable: bool = False
     auth_method: str = None
 
