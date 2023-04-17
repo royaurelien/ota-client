@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ota",
-    version="0.1.0",
+    version="0.0.5",
     description="Odoo Technical Analysis",
     url="https://github.com/royaurelien/ota-client",
     author="Aurelien ROY",
@@ -12,16 +12,19 @@ setup(
     include_package_data=True,
     install_requires=[
         "click",
-        "odoo_analyse",
+        "odoo-analyse",
         "pylint",
         "requests",
         "sh",
-        "cloc",
-        "mccabe",
         "rich",
-        "tabulate",
+        "black",
+        "pylint-odoo",
+        "pydantic",
+        "pandas",
+        "numpy",
+        "appdirs",
     ],
-    extras_require={"graph": ["graphviz", "psycopg2"]},
+    extras_require={},
     entry_points={
         "console_scripts": [
             "ota = ota.main:cli",

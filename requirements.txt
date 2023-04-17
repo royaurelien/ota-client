@@ -1,5 +1,12 @@
-odoo_analyse
+click
+odoo-analyse
 pylint
+requests
 sh
 rich
-tabulate
+black
+pylint-odoo
+pydantic
+pandas
+numpy
+appdirs

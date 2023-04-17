@@ -1,11 +1,30 @@
 from functools import lru_cache
 import os
 
+from appdirs import AppDirs
 from pydantic import BaseSettings
 from pydantic.error_wrappers import ValidationError
 
 from ota.core.console import console
-from ota.core.tools import get_config_file, save_to
+from ota.core.tools import save_to
+
+CONFIG_FILENAME = "config.json"
+DIRS = AppDirs("ota", "Aurelien ROY")
+
+
+def init_dirs():
+    os.makedirs(DIRS.user_data_dir, exist_ok=True)
+
+
+def get_config_path():
+    return DIRS.user_data_dir
+
+
+def get_config_filepath():
+    return os.path.join(get_config_path(), CONFIG_FILENAME)
+
+
+init_dirs()
 
 
 class Settings(BaseSettings):
@@ -56,7 +75,7 @@ class Settings(BaseSettings):
     @classmethod
     def load_from_json(cls):
         """Load settings from JSON file"""
-        filepath = get_config_file()
+        filepath = get_config_filepath()
 
         if not os.path.exists(filepath):
             return cls.new_file()
@@ -84,9 +103,8 @@ class Settings(BaseSettings):
     def save(self):
         """Save settings to JSON file"""
         data = self.json()
-        filepath = get_config_file()
 
-        save_to(data, filepath)
+        save_to(data, get_config_filepath())
 
     def set_value(self, name, value, auto_save=True):
         """Set value"""

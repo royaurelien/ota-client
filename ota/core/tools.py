@@ -270,14 +270,14 @@ def to_json(data):
 
 
 def save_to(data, filepath):
-    with open(filepath, "w") as file:
+    with open(filepath, "w+") as file:
         file.write(data)
 
 
 def save_to_json(data, filepath):
     json_object = json.dumps(data, cls=JSONSetEncoder, indent=2)
 
-    with open(filepath, "w") as file:
+    with open(filepath, "w+") as file:
         file.write(json_object)
 
 
