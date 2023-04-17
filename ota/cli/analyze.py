@@ -5,9 +5,9 @@ import click
 
 from ota.core.settings import get_settings
 from ota.core.analyze import Analyze
-from ota.core.tools import str_to_list, get_folder_name
+from ota.core.tools import str_to_list, get_folder_name, dataframe_to_table
 
-from ota.core.console import console
+from ota.core.console import console, Panel, COLUMNS
 
 
 settings = get_settings()
@@ -18,9 +18,10 @@ settings = get_settings()
 @click.option("--name", "-n", default=None, type=str, help="Report name")
 @click.option("--save", "-s", is_flag=True, default=False, type=bool, help="Save")
 @click.option("--output", "-o", default="report.json", help="Create blank project")
+@click.option("--verbose", "-v", default=False, type=bool, help="Verbose")
 @click.option("--exclude", "-e", default=None, type=str, help="Exclude")
 @click.option("--modules", "-m", default=None, type=str, help="Modules")
-def analyze(path, name, save, exclude, modules, output):
+def analyze(path, name, save, verbose, exclude, modules, output):
     """Analyze modules on path"""
 
     modules = str_to_list(modules)
@@ -29,22 +30,103 @@ def analyze(path, name, save, exclude, modules, output):
     if not name:
         name = get_folder_name(path)
 
-    analysis = Analyze(
-        path=path,
-        name=name,
-        modules=modules,
-        exclude=exclude,
-    )
-    analysis.scan_path()
+    with console.status("Working..."):
+        analysis = Analyze(
+            path=path,
+            name=name,
+            modules=modules,
+            exclude=exclude,
+        )
+        analysis.scan_path()
 
-    if not analysis.has_modules:
-        console.log("Path does not contain any Odoo modules.")
-        exit(1)
+        if not analysis.has_modules:
+            console.log("Path does not contain any Odoo modules.")
+            exit(1)
 
-    console.log(f"{analysis.modules_count} module(s) found.")
+        analysis.run()
+        analysis.export()
 
-    analysis.count_lines_of_code()
-    console.print(analysis.stats.get_dataframe())
+    if verbose:
+        console.log(f"Analyze '{name}'")
+        console.log(f"{analysis.modules_count} module(s) found.\n")
+        console.print(analysis.stats.get_dataframe())
+
+        df = analysis.get_dataframe()
+
+        selection = [
+            "name",
+            "author",
+            "version",
+            "models_count",
+            "fields",
+            "records_count",
+            "views_count",
+            "class_count",
+            "PY",
+            "XML",
+            "JS",
+            # "comment",
+            # "docstring",
+            "score",
+            "depends",
+        ]
+        df = df[selection]
+
+        options = {
+            "name": COLUMNS.name,
+            "models_count": COLUMNS.integer,
+            "fields": COLUMNS.integer,
+            "records_count": COLUMNS.integer,
+            "views_count": COLUMNS.integer,
+            "class_count": COLUMNS.integer,
+            "PY": COLUMNS.integer,
+            "XML": COLUMNS.integer,
+            "JS": COLUMNS.integer,
+            "score": COLUMNS.primary_integer,
+        }
+
+        console.print(
+            dataframe_to_table(
+                df,
+                f"Modules ({len(df)})",
+                selection,
+                column_options=options,
+            )
+        )
+
+        # Only one module, show linter messages
+        if analysis.modules_count == 1:
+            df = analysis.linter.get_dataframe()
+
+            options = {
+                "file": COLUMNS.name,
+                "line": COLUMNS.primary_integer,
+                "column": COLUMNS.integer,
+                # "module": COLUMNS.name,
+                "msg_id": COLUMNS.text_center,
+                "category": COLUMNS.text_center,
+                "symbol": COLUMNS.text_center,
+                "msg": COLUMNS.text_right,
+            }
+
+            console.print(
+                dataframe_to_table(
+                    df,
+                    f"Messages ({len(df)})",
+                    list(options.keys()),
+                    column_options=options,
+                )
+            )
+
+            if not analysis.linter.has_duplicates:
+                console.print(
+                    Panel.fit(
+                        f"Duplicates code ({analysis.linter.duplicates_count})",
+                        border_style="red",
+                    )
+                )
+                for code in analysis.linter.duplicates:
+                    console.print(code)
 
     # options = {}
 

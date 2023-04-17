@@ -2,7 +2,6 @@
 #!/bin/python3
 
 
-from datetime import datetime
 import json
 import os
 import pkgutil
@@ -26,12 +25,18 @@ except ImportError as error:
 
 # from ota.tools.odoo import run_odoo_analyse
 # from ota.tools.pylint import run_pylint, pylint_version
-from ota.core.tools import send_analysis
+from ota.core.tools import send_analysis, now, run_pylint, PYLINT_VERSION
 from ota.core.models import LinesOfCode
 from ota.odoo import Odoo
+from ota.core.console import console
 
 
 class Analyze(object):
+    __linter_modules__ = []
+    linter = None
+
+    exec_time = 0.0
+
     def __init__(self, **kwargs):
         self.path = ""
         self.name = ""
@@ -46,6 +51,8 @@ class Analyze(object):
         self._cloc = None
         self._pylint = None
         self._database = None
+
+        self.__modules__ = []
 
         self.__dict__.update(kwargs)
 
@@ -93,7 +100,7 @@ class Analyze(object):
 
         return obj
 
-    def run_odoo_analyse(self):
+    def load_modules(self):
         odoo = Odoo.from_path(self.path)
 
         if self.modules:
@@ -106,10 +113,12 @@ class Analyze(object):
                 for name, module in odoo.items()
                 if name not in self.exclude
             }
+
         self._odoo = odoo
+        self.__modules__ = self._odoo.export()
 
-        data, linter = self._odoo.export()
-
+    def get_dataframe(self):
+        data = {mod.name: vars(mod) for mod in self.__modules__}
         df = pd.DataFrame(data).transpose()
 
         df["missing"] = np.where(df["missing_dependency"].isnull(), False, True)
@@ -122,26 +131,57 @@ class Analyze(object):
         df["language"] = df["language"].apply(
             lambda row: ", ".join([f"{k}: {v}" for k, v in row.items()])
         )
+        df["score"] = df["score"].apply(lambda row: "PERFECT" if row == 10.0 else row)
         df["missing_dependency"] = df["missing_dependency"].fillna("")
         df = df.replace([0], "-")
 
         df.sort_values("name", ascending=True, inplace=True)
 
-        return df, linter
+        return df
 
-    def run(self):
-        pass
-        # start = time.perf_counter()
-        # # 0. Cloc
-        # cloc_data = run_cloc(self.path)
+    def run_linter(self):
+        # Run once globally
+        self.linter = run_pylint(self.path, recursive=True)
 
-        # # 1. Odoo Analyse
-        # modules, odoo_analyse_data = run_odoo_analyse(self.path, self.exclude)
+        if self.modules_count > 1:
+            for mod in self.__modules__:
+                res = run_pylint(mod.path)
 
-        # # 2. PyLint Analyse
-        # pylint_data = run_pylint(self.path, modules)
+                # Set score on module
+                mod.score = res.score
+                self.__linter_modules__.append(res)
+        elif self.modules_count == 1:
+            self.__modules__[0].score = self.linter.score
+            self.__linter_modules__ = [self.linter]
 
-        # end = time.perf_counter()
+    def export(self):
+        vals = {
+            "name": self.name,
+            # "modules": self,
+            # "exclude": self,
+            "count_modules": self.modules_count,
+            "path": self.path,
+            # "data": self,
+            # "res_cloc": self,
+            # "res_odoo": self,
+            "res_linter": self.linter.json(),
+            "meta_exec_time": self.exec_time,
+            "meta_create_date": now(),
+            "meta_linter_version": PYLINT_VERSION,
+            "meta_odoo_version": self._odoo.version,
+            # "meta_cloc_version": self,
+            # "client_version": self,
+        }
+        # console.print(vals)
+
+    def run(self, **kwargs):
+        start = time.perf_counter()
+
+        self.count_lines_of_code()
+        self.load_modules()
+        self.run_linter()
+
+        self.exec_time = time.perf_counter() - start
 
         # # Prepare values to export
         # self.data = {

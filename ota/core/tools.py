@@ -1,11 +1,19 @@
 import ast
+from datetime import datetime
 import json
 import requests
 from urllib.parse import urljoin
 import re
 import os
 from pathlib import Path
+from io import StringIO
+import sys
 
+from pylint import __version__ as PYLINT_VERSION
+from pylint.lint import Run
+from pylint.reporters.text import TextReporter
+from pylint.reporters import JSONReporter
+import pandas as pd
 from black import format_str, FileMode
 from black.parsing import InvalidInput
 import jinja2
@@ -14,7 +22,7 @@ from jinja2.exceptions import UndefinedError
 # requests.packages.urllib3.disable_warnings()
 
 from ota.core.console import console, Table
-from ota.core.models import File
+from ota.core.models import File, LinterResult
 
 
 def dict_to_list(data, keys=None):
@@ -193,9 +201,14 @@ def send_analysis(url, data):
     return (response.status_code, response.json())
 
 
-def dataframe_to_table(df, title, columns, **kwargs):
+def dataframe_to_table(df, title, columns=[], **kwargs):
     table = Table(title=title)
-    df = df[columns]
+
+    if not columns:
+        columns = list(df.columns)
+    else:
+        df = df[columns]
+
     df = df.astype(str)
 
     options = kwargs.get("column_options", {})
@@ -253,3 +266,106 @@ def str_to_list(string):
 
 def get_folder_name(path):
     return os.path.basename(path)
+
+
+def round_float(value, digits=2):
+    return round(value, digits)
+
+
+def _prepare_stats(stats):
+    return {
+        # 'success': bool(stats.global_note >= threshold),
+        "score": round_float(stats.global_note),
+        "convention": int(stats.convention),
+        "error": int(stats.error),
+        "fatal": int(stats.fatal),
+        "info": int(stats.info),
+        "refactor": int(stats.refactor),
+        "statement": int(stats.statement),
+        "warning": int(stats.warning),
+    }
+
+
+def run_pylint(path, **kwargs):
+    name = kwargs.get("name", os.path.basename(path))
+    recursive = kwargs.get("recursive", False)
+
+    out_stream = StringIO()
+    quiet_reporter = JSONReporter()
+    quiet_reporter.set_output(out_stream)
+
+    args = [path, "-ry"]
+    if recursive:
+        args += ["--recursive", "y"]
+
+    results = Run(args, reporter=quiet_reporter, do_exit=False)
+
+    stats = results.linter.stats
+
+    df = pd.DataFrame({name: stats.code_type_count}).transpose()
+    df1 = df.copy()
+
+    for key in ["code", "comment", "docstring", "empty"]:
+        df1[key] = round(df1[key] * 100 / df1["total"], 2)
+
+    vals = {
+        "score": round_float(stats.global_note),
+        "stats": _prepare_stats(stats),
+        "by_messages": stats.by_msg,
+        "report": df1.to_dict(orient="records")[0],
+    }
+
+    messages = pd.DataFrame(quiet_reporter.messages)
+
+    if not messages.empty:
+        duplicate_code = messages[(messages["symbol"] == "duplicate-code")]
+
+        # module.models.model --> models / model
+        # messages["module"] = messages["module"].apply(
+        #     lambda row: " / ".join(row.split(".")[-2:])
+        # )
+
+        messages.drop(duplicate_code.index, inplace=True)
+        messages.sort_values(["module", "line"], ascending=True, inplace=True)
+
+        def truc(path):
+            parts = path.split("/")
+            length = 2 if len(parts) <= 2 else 3
+            return "/".join(parts[-length:])
+
+        messages["file"] = messages["path"].apply(truc)
+        # print(list(messages))
+
+        keys = [
+            "file",
+            "msg_id",
+            "symbol",
+            "msg",
+            "C",
+            "category",
+            # "confidence",
+            # "abspath",
+            # "path",
+            "module",
+            "obj",
+            "line",
+            "column",
+            # "end_line",
+            # "end_column",
+        ]
+
+        messages = messages[keys]
+        vals.update(
+            {
+                "messages": messages.to_dict(),
+                "duplicates": list(duplicate_code["msg"].values)
+                if not duplicate_code.empty
+                else [],
+            }
+        )
+
+    return LinterResult(**vals)
+
+
+def now():
+    return datetime.now().strftime("%Y/%m/%d %H:%M:%S")

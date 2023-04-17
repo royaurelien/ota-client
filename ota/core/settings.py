@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     local_url: str = "http://0.0.0.0:8080"
     auth_enable: bool = False
     auth_method: str = None
-
+    digits: int = 2
     threshold: float = 7.0
 
     @validator("threshold")
