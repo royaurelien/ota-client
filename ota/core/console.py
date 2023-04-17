@@ -15,7 +15,3 @@ COLUMNS = Columns(
     text_right={"justify": "right", "style": "cyan", "no_wrap": False},
     text_center={"justify": "center", "no_wrap": True},
 )
-
-# DEFAULT_OPTIONS = {
-#     "name": {"style": "magenta", "no_wrap": True},
-# }

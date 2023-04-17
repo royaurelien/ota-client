@@ -1,12 +1,5 @@
-# -*- coding: utf-8 -*-
-#!/bin/python3
-
-import logging
-
 from ota.odoo import OdooField
 from ota.core.tools import dict_to_list
-
-_logger = logging.getLogger(__name__)
 
 
 class Field(OdooField):
@@ -45,19 +38,7 @@ class Field(OdooField):
             self.args = []
 
     def get_definition(self, keywords=True):
-        # if keywords:
-        #     parts += [*self.keywords]
-
         keys = ["selection", "comodel_name", "inverse_name", "related"]
-
-        # if self.ttype in ["Char", "Text", "Html"]:
-        #     pass
-        # elif self.ttype in ["Many2one", "One2many", "Many2many"]:
-        #     pass
-        # elif self.ttype in ["Many2one", "One2many", "Many2many"]:
-        #     pass
-        # else:
-        #     pass
 
         parts = dict_to_list(self.keywords, keys)
         chain = ", ".join(parts)

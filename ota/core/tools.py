@@ -31,7 +31,6 @@ from jinja2 import (
     PackageLoader,
     select_autoescape,
 )
-from rich import inspect
 
 # requests.packages.urllib3.disable_warnings()
 
@@ -39,6 +38,8 @@ from ota.core.console import console, Table
 from ota.core.models import File, LinterResult
 
 _logger = logging.getLogger(__name__)
+
+TEMPLATE_DIR = False
 
 
 def dict_to_list(data, keys=None):
@@ -71,10 +72,9 @@ def get_assign(src):
             if isinstance(child, ast.Assign):
                 return child
 
-    # src = format_str(src, mode=FileMode())
     src = src.strip('"')
-    # print(src)
     obj = ast.parse(src)
+
     return function(obj)
 
 
@@ -100,7 +100,7 @@ def generate_code(template: str, data: dict, functions=None) -> str:
         code = False
     except InvalidInput as error:
         _logger.error(error)
-        exit(1)
+        sys.exit(1)
 
     return code
 
@@ -131,18 +131,7 @@ def get_arg(obj):
                         res.append(tmp)
                         continue
             result.append(res)
-        # print(result)
         value = ast.dump(value)
-
-        # value = ast.literal_eval(value)
-
-        # print(value)
-        # exit(1)
-    # else:
-    #     print(type(obj))
-    #     exit(1)
-
-    # return f'"{value}"'
     return value
 
 

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-#!/bin/python3
-
-
 import json
 import os
 import pkgutil
@@ -23,10 +19,7 @@ except ImportError as error:
     exit(1)
 
 
-# from ota.tools.odoo import run_odoo_analyse
-# from ota.tools.pylint import run_pylint, pylint_version
 from ota.core.tools import (
-    post_json,
     now,
     save_to_json,
     save_to,
@@ -37,7 +30,6 @@ from ota.core.tools import (
 )
 from ota.core.models import LinesOfCode, LocalModule, LinterResult
 from ota.odoo import Odoo, ODOO_VERSION
-from ota.core.console import console
 
 
 class Analyze(object):
@@ -212,6 +204,8 @@ class Analyze(object):
             "meta_cloc_version": self.meta_cloc_version or self.stats.version,
             "meta_ota_version": self.__version__,
         }
+
+        # FIXME: jsonify
         # vals["modules"].update({mod.name: vars(mod) for mod in self.linter_by_modules})
         data = to_json(vals)
         # data["linter"] = self.linter.json()
@@ -268,10 +262,3 @@ class Analyze(object):
         ]
 
         return self
-
-    # def send(self, url):
-    #     status_code, data = send_analysis(url, self.data)
-
-    #     console.log(status_code)
-
-    #     print(data.get("id"))

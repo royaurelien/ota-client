@@ -40,62 +40,58 @@ def inspect(database, host, user, password, local):
     console.log(f"Odoo Version: {database.odoo_version}")
 
     with console.status("Working..."):
-        for k, v in database.get_parameters():
-            console.log(f"{k}: {v}")
-
+        params = database.get_parameters()
         meta = database.get_meta()
-        console.print(
-            dataframe_to_table(
-                meta,
-                "Metadata",
-                ["name", "count"],
-                column_options=dict(name=COLUMNS.name, count=COLUMNS.primary_integer),
+        apps, apps_count = database.get_applications()
+        modules, modules_count = database.get_modules()
+
+        applications = list(
+            set(apps["name"]).intersection(
+                set(list(settings.models_by_applications.keys()))
             )
         )
 
-        apps, count = database.get_applications()
+        models = [
+            v for k, v in settings.models_by_applications.items() if k in applications
+        ]
+        data = {}
 
-        options = {
-            "name": {"style": "magenta", "no_wrap": True},
-            "shortdesc": {"justify": "left", "style": "green"},
-        }
+    for k, v in params:
+        console.log(f"{k}: {v}")
 
-        console.print(
-            dataframe_to_table(
-                apps,
-                f"Applications ({count})",
-                ["name", "shortdesc"],
-                column_options=options,
-            )
-        )
-
-        modules, count = database.get_modules()
-
-        options = {
-            "author": {"justify": "right", "style": "cyan", "no_wrap": True},
-            "name": {"style": "magenta", "no_wrap": True},
-            "shortdesc": {"justify": "center", "style": "green"},
-        }
-
-        console.print(
-            dataframe_to_table(
-                modules,
-                f"Modules ({count})",
-                ["name", "shortdesc", "author"],
-                column_options=options,
-            )
-        )
-
-    applications = list(
-        set(apps["name"]).intersection(
-            set(list(settings.models_by_applications.keys()))
+    console.print(
+        dataframe_to_table(
+            meta,
+            "Metadata",
+            ["name", "count"],
+            column_options=dict(name=COLUMNS.name, count=COLUMNS.primary_integer),
         )
     )
 
-    models = [
-        v for k, v in settings.models_by_applications.items() if k in applications
-    ]
-    data = {}
+    console.print(
+        dataframe_to_table(
+            apps,
+            f"Applications ({apps_count})",
+            ["name", "shortdesc"],
+            column_options={
+                "name": {"style": "magenta", "no_wrap": True},
+                "shortdesc": {"justify": "left", "style": "green"},
+            },
+        )
+    )
+
+    console.print(
+        dataframe_to_table(
+            modules,
+            f"Modules ({modules_count})",
+            ["name", "shortdesc", "author"],
+            column_options={
+                "author": {"justify": "right", "style": "cyan", "no_wrap": True},
+                "name": {"style": "magenta", "no_wrap": True},
+                "shortdesc": {"justify": "center", "style": "green"},
+            },
+        )
+    )
 
     for model in models:
         stats = database.get_stats(model)
@@ -118,7 +114,6 @@ def inspect(database, host, user, password, local):
                 df,
                 "Creators",
                 ["name", "count"],
-                # column_options=options,
             )
         )
 
@@ -126,23 +121,21 @@ def inspect(database, host, user, password, local):
     df = df.transpose()
     df.reset_index(inplace=True)
     df.rename(columns={"index": "name"}, inplace=True)
-
     total = df["total"].sum()
 
     col = {"justify": "center", "style": "green"}
-    options = {
-        "name": {"style": "magenta", "no_wrap": True},
-        "yesterday": col,
-        "this_week": col,
-        "this_month": col,
-        "total": col,
-    }
 
     console.print(
         dataframe_to_table(
             df,
             f"Records ({total})",
             ["name", "yesterday", "this_week", "this_month", "total"],
-            column_options=options,
+            column_options={
+                "name": {"style": "magenta", "no_wrap": True},
+                "yesterday": col,
+                "this_week": col,
+                "this_month": col,
+                "total": col,
+            },
         )
     )

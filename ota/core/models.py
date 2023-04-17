@@ -27,29 +27,6 @@ File = namedtuple(
 )
 
 
-class Analysis(BaseModel):
-    name: str
-    modules: str
-    exclude: str
-    count_modules: int
-    path: str
-
-    data: dict
-
-    res_cloc: dict
-    res_odoo: dict
-    res_linter: dict
-
-    meta_exec_time: float
-    meta_create_date: str
-
-    meta_linter_version: str = ""
-    meta_odoo_version: str = ""
-    meta_cloc_version: str = ""
-
-    client_version: str
-
-
 class LinesOfCode(BaseModel):
     version: str = "0.0"
     exec_time: float
@@ -141,8 +118,5 @@ class LinterResult(BaseModel):
             "by_messages": self.by_messages,
             "duplicates_count": self.duplicates_count,
         }
-        # vals.pop("messages")
-        # vals.pop("duplicates")
-        # vals["duplicates_count"] = self.duplicates_count
 
         return vals

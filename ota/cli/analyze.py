@@ -16,7 +16,7 @@ settings = get_settings()
 @click.option("--name", "-n", default=None, type=str, help="Report name")
 @click.option("--save", "-s", is_flag=True, default=False, type=bool, help="Save")
 @click.option("--output", "-o", default="report.json", help="Create blank project")
-@click.option("--verbose", "-v", default=False, type=bool, help="Verbose")
+@click.option("--verbose", "-v", default=True, type=bool, help="Verbose")
 @click.option("--exclude", "-e", default=None, type=str, help="Exclude")
 @click.option("--modules", "-m", default=None, type=str, help="Modules")
 def analyze(path, name, save, verbose, exclude, modules, output):

@@ -1,16 +1,11 @@
-# -*- coding: utf-8 -*-
-#!/bin/python3
-
 from functools import lru_cache
 import os
-import shutil
-import json
 
-from pydantic import BaseSettings, validator
+from pydantic import BaseSettings
 from pydantic.error_wrappers import ValidationError
 
 from ota.core.console import console
-from ota.core.tools import load_from_json, get_config_file, save_to
+from ota.core.tools import get_config_file, save_to
 
 
 class Settings(BaseSettings):
@@ -109,6 +104,6 @@ class Settings(BaseSettings):
         return value
 
 
-# @lru_cache()
+@lru_cache()
 def get_settings():
     return Settings.load_from_json()

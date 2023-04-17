@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-#!/bin/python3
-
 import ast
-import os
-import logging
-from collections import namedtuple
 
 
 from ota.odoo import OdooModule
@@ -13,8 +7,6 @@ from ota.core.tools import generate
 from ota.core.models import File
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
-
-_logger = logging.getLogger(__name__)
 
 
 class Module(OdooModule):
@@ -70,19 +62,14 @@ class Module(OdooModule):
 
             models.append(model.filename)
 
-            # print(file.content)
-
         f = generate("init.jinja2", dict(modules=models), "models/__init__")
         files[f.name] = f
-        # print(f.content)
 
         f = generate("init.jinja2", dict(modules=["models"]), "__init__")
         files[f.name] = f
-        # print(f.content)
 
         f = generate("manifest.jinja2", dict(manifest=self.manifest), "__manifest__")
         files[f.name] = f
-        # print(f.content)
 
         return files
 

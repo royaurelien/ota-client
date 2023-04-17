@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-#!/bin/python3
-
 import ast
-from collections import namedtuple
-import logging
 
 from ota.odoo import OdooModel, get_ast_source_segment
 from ota.odoo.field import Field
@@ -12,8 +7,6 @@ from ota.core.models import File
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]
-
-_logger = logging.getLogger(__name__)
 
 
 class Model(OdooModel):

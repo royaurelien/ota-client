@@ -122,7 +122,6 @@ class OdooRpc:
             for k, v in keys.items()
         ]
         df = pd.DataFrame(res)
-        # df.set_index("name", inplace=True)
 
         return df
 
