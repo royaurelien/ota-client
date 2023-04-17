@@ -25,41 +25,48 @@ except ImportError as error:
 
 # from ota.tools.odoo import run_odoo_analyse
 # from ota.tools.pylint import run_pylint, pylint_version
-from ota.core.tools import send_analysis, now, run_pylint, PYLINT_VERSION
+from ota.core.tools import (
+    send_analysis,
+    now,
+    save_to_json,
+    save_to,
+    to_json,
+    load_from_json,
+    run_pylint,
+    PYLINT_VERSION,
+)
 from ota.core.models import LinesOfCode
 from ota.odoo import Odoo
 from ota.core.console import console
 
 
 class Analyze(object):
-    __linter_modules__ = []
+    __version__ = "0.1.0"
+
+    modules: list = []
+    linter_by_modules: list = []
     linter = None
+    stats = None
 
     exec_time = 0.0
 
     def __init__(self, **kwargs):
         self.path = ""
         self.name = ""
-        self.exclude = []
-        self.modules = []
-        self.data = {}
-
-        self.stats = None
+        self.to_exclude = []
+        self.to_keep = []
 
         self._modules = []
         self._odoo = None
-        self._cloc = None
-        self._pylint = None
         self._database = None
-
-        self.__modules__ = []
 
         self.__dict__.update(kwargs)
 
     def scan_path(self):
+        """Search for Odoo modules at path"""
         modules = list(pkgutil.walk_packages([self.path]))
 
-        # Is the path a package?
+        # Is path a package?
         res = [
             os.path.basename(item.module_finder.path)
             for item in filter(lambda item: item.name == "__manifest__", modules)
@@ -68,7 +75,15 @@ class Analyze(object):
         if not res:
             res = [item.name for item in filter(lambda item: item.ispkg, modules)]
 
-        self._modules = list(set(res))
+        # FIXME: filter modules
+        res = set(res)
+
+        if self.to_keep:
+            res = res.intersection(set(self.to_keep))
+        if self.to_exclude:
+            res = res.difference(set(self.to_exclude))
+
+        self._modules = list(res)
 
     @property
     def has_modules(self):
@@ -79,6 +94,7 @@ class Analyze(object):
         return len(self._modules)
 
     def count_lines_of_code(self):
+        """Cout lines of code"""
         self.stats = self._count_lines_of_code(self.path)
 
     def _count_lines_of_code(self, path):
@@ -101,24 +117,29 @@ class Analyze(object):
         return obj
 
     def load_modules(self):
+        """Load modules from odoo_analyse"""
         odoo = Odoo.from_path(self.path)
 
-        if self.modules:
+        if self.to_keep:
             odoo.modules = {
-                name: module for name, module in odoo.items() if name in self.modules
+                name: module for name, module in odoo.items() if name in self.to_keep
             }
-        elif self.exclude:
+        elif self.to_exclude:
             odoo.modules = {
                 name: module
                 for name, module in odoo.items()
-                if name not in self.exclude
+                if name not in self.to_exclude
             }
 
         self._odoo = odoo
-        self.__modules__ = self._odoo.export()
+        self.modules = self._odoo.export()
+
+    @property
+    def is_ok(self):
+        return set(k for k, v in self._odoo.items()) == set(self._modules)
 
     def get_dataframe(self):
-        data = {mod.name: vars(mod) for mod in self.__modules__}
+        data = {mod.name: vars(mod) for mod in self.modules}
         df = pd.DataFrame(data).transpose()
 
         df["missing"] = np.where(df["missing_dependency"].isnull(), False, True)
@@ -140,39 +161,49 @@ class Analyze(object):
         return df
 
     def run_linter(self):
+        """Run linter"""
         # Run once globally
         self.linter = run_pylint(self.path, recursive=True)
 
         if self.modules_count > 1:
-            for mod in self.__modules__:
-                res = run_pylint(mod.path)
+            for mod in self.modules:
+                res = run_pylint(mod.path, name=mod.name)
 
                 # Set score on module
                 mod.score = res.score
-                self.__linter_modules__.append(res)
+                self.linter_by_modules.append(res)
         elif self.modules_count == 1:
-            self.__modules__[0].score = self.linter.score
-            self.__linter_modules__ = [self.linter]
+            self.modules[0].score = self.linter.score
+            self.linter_by_modules = [self.linter]
 
     def export(self):
         vals = {
             "name": self.name,
-            # "modules": self,
-            # "exclude": self,
+            "args": {
+                "modules_to_keep": self.to_keep,
+                "modules_to_exclude": self.to_exclude,
+            },
             "count_modules": self.modules_count,
             "path": self.path,
-            # "data": self,
-            # "res_cloc": self,
-            # "res_odoo": self,
-            "res_linter": self.linter.json(),
+            "stats": self.stats.data,
+            "languages": self.stats.languages,
+            "modules": {mod.name: vars(mod) for mod in self.modules},
+            "linter_by_modules": {
+                mod.name: vars(mod) for mod in self.linter_by_modules
+            },
+            "linter": self.linter.get_summary(),
             "meta_exec_time": self.exec_time,
             "meta_create_date": now(),
             "meta_linter_version": PYLINT_VERSION,
             "meta_odoo_version": self._odoo.version,
-            # "meta_cloc_version": self,
-            # "client_version": self,
+            "meta_cloc_version": self.stats.version,
+            "meta_ota_version": self.__version__,
         }
-        # console.print(vals)
+        # vals["modules"].update({mod.name: vars(mod) for mod in self.linter_by_modules})
+        data = to_json(vals)
+        # data["linter"] = self.linter.json()
+
+        return data
 
     def run(self, **kwargs):
         start = time.perf_counter()
@@ -201,19 +232,11 @@ class Analyze(object):
         #     # 'odoo_analyse_version': Odoo.__version__,
         # }
 
-    def to_json(self):
-        return json.dumps(self.data, indent=4)
-
     def save(self, filepath):
-        json_object = self.to_json()
-
-        filepath = os.path.join(filepath)
-        with open(filepath, "w") as outfile:
-            outfile.write(json_object)
+        save_to(self.export(), filepath)
 
     def load(self, filepath):
-        with open(filepath, "r") as file:
-            data = json.loads(file.read())
+        data = load_from_json(filepath)
 
         self.data = data
         self.path = data.get("path")

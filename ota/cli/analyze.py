@@ -24,8 +24,8 @@ settings = get_settings()
 def analyze(path, name, save, verbose, exclude, modules, output):
     """Analyze modules on path"""
 
-    modules = str_to_list(modules)
-    exclude = str_to_list(exclude)
+    to_keep = str_to_list(modules)
+    to_exclude = str_to_list(exclude)
 
     if not name:
         name = get_folder_name(path)
@@ -34,8 +34,8 @@ def analyze(path, name, save, verbose, exclude, modules, output):
         analysis = Analyze(
             path=path,
             name=name,
-            modules=modules,
-            exclude=exclude,
+            to_keep=to_keep,
+            to_exclude=to_exclude,
         )
         analysis.scan_path()
 
@@ -44,7 +44,16 @@ def analyze(path, name, save, verbose, exclude, modules, output):
             exit(1)
 
         analysis.run()
+
+        if not analysis.is_ok:
+            console.log("Modules are not equals.")
+            exit(1)
+
         analysis.export()
+
+    if save:
+        analysis.save(output)
+        console.log(f"Analysis saved to {output}")
 
     if verbose:
         console.log(f"Analyze '{name}'")
@@ -98,27 +107,28 @@ def analyze(path, name, save, verbose, exclude, modules, output):
         if analysis.modules_count == 1:
             df = analysis.linter.get_dataframe()
 
-            options = {
-                "file": COLUMNS.name,
-                "line": COLUMNS.primary_integer,
-                "column": COLUMNS.integer,
-                # "module": COLUMNS.name,
-                "msg_id": COLUMNS.text_center,
-                "category": COLUMNS.text_center,
-                "symbol": COLUMNS.text_center,
-                "msg": COLUMNS.text_right,
-            }
+            if not df.empty:
+                options = {
+                    "file": COLUMNS.name,
+                    "line": COLUMNS.primary_integer,
+                    "column": COLUMNS.integer,
+                    # "module": COLUMNS.name,
+                    "msg_id": COLUMNS.text_center,
+                    "category": COLUMNS.text_center,
+                    "symbol": COLUMNS.text_center,
+                    "msg": COLUMNS.text_right,
+                }
 
-            console.print(
-                dataframe_to_table(
-                    df,
-                    f"Messages ({len(df)})",
-                    list(options.keys()),
-                    column_options=options,
+                console.print(
+                    dataframe_to_table(
+                        df,
+                        f"Messages ({len(df)})",
+                        list(options.keys()),
+                        column_options=options,
+                    )
                 )
-            )
 
-            if not analysis.linter.has_duplicates:
+            if analysis.linter.has_duplicates:
                 console.print(
                     Panel.fit(
                         f"Duplicates code ({analysis.linter.duplicates_count})",
@@ -127,15 +137,3 @@ def analyze(path, name, save, verbose, exclude, modules, output):
                 )
                 for code in analysis.linter.duplicates:
                     console.print(code)
-
-    # options = {}
-
-    # if exclude and isinstance(exclude, str):
-    #     exclude = list(map(str.strip, exclude.split(",")))
-    #     options["exclude"] = exclude
-
-    # analysis = Analyze(path=path, name=name, **options)
-    # analysis.run()
-
-    # if save and output:
-    #     analysis.save(output)

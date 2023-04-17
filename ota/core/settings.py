@@ -10,7 +10,7 @@ from pydantic import BaseSettings, validator
 from pydantic.error_wrappers import ValidationError
 
 from ota.core.console import console
-from ota.core.tools import read_from_json, get_config_file, save_to_json
+from ota.core.tools import load_from_json, get_config_file, save_to_json
 
 
 class Settings(BaseSettings):
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
         if not os.path.exists(filepath):
             return cls.new_file()
 
-        data = read_from_json(filepath)
+        data = load_from_json(filepath)
         if not data:
             return cls.new_file()
 

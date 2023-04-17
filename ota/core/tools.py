@@ -148,23 +148,6 @@ def humanize(string):
     return string
 
 
-def read_from_json(path):
-    """Load JSON File from path"""
-    with open(path, "r") as file:
-        try:
-            data = json.load(file)
-        except json.decoder.JSONDecodeError:
-            data = None
-
-    return data
-
-
-def save_to_json(path, data):
-    """Dump dict to JSON file"""
-    with open(path, "w") as file:
-        file.write(json.dumps(data))
-
-
 def download_file(url, params=None):
     """Download file"""
 
@@ -253,8 +236,31 @@ class JSONSetEncoder(json.JSONEncoder):
         return super(JSONSetEncoder, self).default(o)
 
 
-def json_dump(data):
+def load_from_json(filepath):
+    """Load JSON File from path"""
+    with open(filepath, "r") as file:
+        try:
+            data = json.load(file)
+        except json.decoder.JSONDecodeError:
+            data = None
+
+    return data
+
+
+def to_json(data):
     return json.dumps(data, cls=JSONSetEncoder, indent=2)
+
+
+def save_to(data, filepath):
+    with open(filepath, "w") as file:
+        file.write(data)
+
+
+def save_to_json(data, filepath):
+    json_object = json.dumps(data, cls=JSONSetEncoder, indent=2)
+
+    with open(filepath, "w") as file:
+        file.write(json_object)
 
 
 def str_to_list(string):
@@ -275,7 +281,7 @@ def round_float(value, digits=2):
 def _prepare_stats(stats):
     return {
         # 'success': bool(stats.global_note >= threshold),
-        "score": round_float(stats.global_note),
+        # "score": round_float(stats.global_note),
         "convention": int(stats.convention),
         "error": int(stats.error),
         "fatal": int(stats.fatal),
@@ -287,6 +293,10 @@ def _prepare_stats(stats):
 
 
 def run_pylint(path, **kwargs):
+    """
+    Run PyLint on path
+    Evaluation : 10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+    """
     name = kwargs.get("name", os.path.basename(path))
     recursive = kwargs.get("recursive", False)
 
@@ -309,6 +319,7 @@ def run_pylint(path, **kwargs):
         df1[key] = round(df1[key] * 100 / df1["total"], 2)
 
     vals = {
+        "name": name,
         "score": round_float(stats.global_note),
         "stats": _prepare_stats(stats),
         "by_messages": stats.by_msg,
@@ -328,13 +339,12 @@ def run_pylint(path, **kwargs):
         messages.drop(duplicate_code.index, inplace=True)
         messages.sort_values(["module", "line"], ascending=True, inplace=True)
 
-        def truc(path):
+        def get_file(path):
             parts = path.split("/")
             length = 2 if len(parts) <= 2 else 3
             return "/".join(parts[-length:])
 
-        messages["file"] = messages["path"].apply(truc)
-        # print(list(messages))
+        messages["file"] = messages["path"].apply(get_file)
 
         keys = [
             "file",

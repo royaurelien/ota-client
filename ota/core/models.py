@@ -103,6 +103,7 @@ class LocalModule(BaseModel):
 
 
 class LinterResult(BaseModel):
+    name: str
     score: float
     stats: dict
     by_messages: dict
@@ -120,3 +121,16 @@ class LinterResult(BaseModel):
 
     def get_dataframe(self):
         return pd.DataFrame(self.messages)
+
+    def get_summary(self):
+        vals = {
+            "score": self.score,
+            "stats": self.stats,
+            "by_messages": self.by_messages,
+            "duplicates_count": self.duplicates_count,
+        }
+        # vals.pop("messages")
+        # vals.pop("duplicates")
+        # vals["duplicates_count"] = self.duplicates_count
+
+        return vals
