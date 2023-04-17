@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 from io import StringIO
 import sys
+from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 
 from pylint import __version__ as PYLINT_VERSION
 from pylint.lint import Run
@@ -18,6 +20,14 @@ from black import format_str, FileMode
 from black.parsing import InvalidInput
 import jinja2
 from jinja2.exceptions import UndefinedError
+
+from jinja2 import (
+    ChoiceLoader,
+    Environment,
+    FileSystemLoader,
+    PackageLoader,
+    select_autoescape,
+)
 
 # requests.packages.urllib3.disable_warnings()
 
@@ -379,3 +389,33 @@ def run_pylint(path, **kwargs):
 
 def now():
     return datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
+
+def build_jinja_env():
+    """Build Jinja2 environement"""
+    loader = ChoiceLoader(
+        [
+            FileSystemLoader([os.getcwd(), "/"]),
+            PackageLoader("pylint_json2html", "templates"),
+        ]
+    )
+
+    env = Environment(
+        loader=loader,
+        autoescape=select_autoescape(["html", "xml", "jinja2"]),
+    )
+    return env
+
+
+def format_date(dt_obj):
+    return dt_obj.strftime("%Y-%m-%d")
+
+
+def get_periods():
+    now = date.today()
+
+    yesterday = now - relativedelta(days=1)
+    last_week = yesterday - relativedelta(weeks=1)
+    last_month = yesterday - relativedelta(months=1)
+
+    return (format_date(yesterday), format_date(last_week), format_date(last_month))

@@ -20,13 +20,14 @@ from ota.odoo.model import Model
 from ota.odoo.field import Field
 
 from ota.core.console import console
-from ota.tools.pylint import run_pylint_once
 from ota.core.models import LocalModule
 
 _logger = logging.getLogger(__name__)
 
 
 class Odoo(OOdoo):
+    __output__ = None
+
     @property
     def version(self):
         return importlib.metadata.version("odoo_analyse")
@@ -42,6 +43,11 @@ class Odoo(OOdoo):
         self.full.update(result.copy())
         self.modules.update(result.copy())
 
+    def _analyse_out_json(self, data, file_path):
+        """Output the analyse result as JSON"""
+
+        self.__output__ = data
+
     def export(self):
         output = StringIO()
 
@@ -50,19 +56,10 @@ class Odoo(OOdoo):
         self.analyse("-")
         sys.stdout = sys.__stdout__
 
-        data = json.loads(output.getvalue())
-
+        data = self.__output__
         for name in data.keys():
             vals = self.modules[name].to_json()
             data[name].update(vals)
-
-            # x = data[name].setdefault("missing_dependency", {})
-
-            # data[name]["missing_dependency"] = x
-
-            # linter[name] = run_pylint_once(data[name]["path"])
-            # data[name]["score"] = linter[name].get("score", 0)
-            # data[name].update(linter[name].get("code_report", {}))
 
         return [LocalModule(**values) for values in data.values()]
 

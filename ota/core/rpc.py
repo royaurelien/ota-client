@@ -1,41 +1,7 @@
-from datetime import datetime, date, timedelta
-from dateutil.relativedelta import relativedelta
-
-
 import xmlrpc.client
 import pandas as pd
 
-DEFAULT_MODELS = {
-    "sale_management": "sale.order",
-    "account": "account.move",
-    "stock": "stock.picking",
-    # "account_accountant": "",
-    "purchase": "purchase.order",
-    "crm": "crm.lead",
-    # "web_studio": "",
-    # "documents": "",
-    # "hr_holidays": "",
-    # "hr": "hr.employee",
-    # "sign": "",
-    "contacts": "res.partner",
-    # "calendar": "",
-    # "hr_contract": "",
-}
-
-
-def ftime(dt_obj):
-    return dt_obj.strftime("%Y-%m-%d")
-
-
-def get_periods():
-    # now = datetime.now()
-    now = date.today()
-
-    yesterday = now - relativedelta(days=1)
-    last_week = yesterday - relativedelta(weeks=1)
-    last_month = yesterday - relativedelta(months=1)
-
-    return (ftime(yesterday), ftime(last_week), ftime(last_month))
+from ota.core.tools import get_periods
 
 
 def get_create_domain(start_date, end_date):
@@ -68,8 +34,7 @@ class OdooRpc:
             self.uid = self.common.authenticate(
                 self.db, self.username, self.password, {}
             )
-        except Exception as error:
-            # print(error)
+        except Exception:
             self.uid = None
 
     @property

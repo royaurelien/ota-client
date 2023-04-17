@@ -22,6 +22,28 @@ class Settings(BaseSettings):
     auth_method: str = None
     digits: int = 2
     threshold: float = 7.0
+    models_by_applications = {
+        "sale_management": "sale.order",
+        "account": "account.move",
+        "stock": "stock.picking",
+        # "account_accountant": "",
+        "purchase": "purchase.order",
+        "crm": "crm.lead",
+        # "web_studio": "",
+        # "documents": "",
+        # "hr_holidays": "",
+        # "hr": "hr.employee",
+        # "sign": "",
+        "contacts": "res.partner",
+        # "calendar": "",
+        # "hr_contract": "",
+    }
+    local_database = "http://localhost:8069"
+    local_user = "admin"
+    local_password = "admin"
+
+    def get_local_credentials(self):
+        return (self.local_database, self.local_user, self.local_password)
 
     @validator("threshold")
     @classmethod  # Optional, but your linter may like it.

@@ -3,9 +3,12 @@
 import click
 import pandas as pd
 
-from ota.tools.rpc import OdooRpc, DEFAULT_MODELS
+from ota.core.settings import get_settings
+from ota.core.rpc import OdooRpc
 from ota.core.console import console
 from ota.core.tools import dataframe_to_table
+
+settings = get_settings()
 
 
 @click.command()
@@ -25,9 +28,7 @@ def inspect(database, host, user, password, local):
     """Inspect Database"""
 
     if local:
-        host = "http://localhost:8069"
-        user = "admin"
-        password = "admin"
+        host, user, password = settings.get_local_credentials()
 
     database = OdooRpc(host, database, user, password)
 
@@ -36,7 +37,6 @@ def inspect(database, host, user, password, local):
         exit(1)
 
     with console.status("Working..."):
-        # time.sleep(2)
         apps, count = database.get_applications()
 
         options = {
@@ -71,9 +71,13 @@ def inspect(database, host, user, password, local):
         )
 
     applications = list(
-        set(modules["name"]).intersection(set(list(DEFAULT_MODELS.keys())))
+        set(modules["name"]).intersection(
+            set(list(settings.models_by_applications.keys()))
+        )
     )
-    models = [v for k, v in DEFAULT_MODELS.items() if k in applications]
+    models = [
+        v for k, v in settings.models_by_applications.items() if k in applications
+    ]
     data = {}
 
     for model in models:

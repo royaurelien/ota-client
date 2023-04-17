@@ -12,7 +12,6 @@ from ota.cli.config import config
 from ota.cli.analyze import analyze
 from ota.cli.send import send
 from ota.cli.download import download
-from ota.cli.stats import stats
 
 
 @click.group()
@@ -25,4 +24,3 @@ cli.add_command(inspect)
 cli.add_command(send)
 cli.add_command(download)
 cli.add_command(config)
-cli.add_command(stats)
