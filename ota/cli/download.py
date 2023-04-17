@@ -2,10 +2,9 @@ import click
 
 
 from ota.core.settings import get_settings
-from ota.core.analyze import Analyze
-from ota.core.tools import download_file, urljoin, dataframe_to_table
+from ota.core.tools import download_file, urljoin
 
-from ota.core.console import console
+# from ota.core.console import console
 
 
 settings = get_settings()

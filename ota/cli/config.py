@@ -4,8 +4,6 @@ import click
 from ota.core.settings import get_settings
 from ota.core.console import console
 
-# from ota.core.tools import dataframe_to_table
-
 
 settings = get_settings()
 

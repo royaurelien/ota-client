@@ -1,9 +1,12 @@
 import click
 import pandas as pd
+import sys
+
+from rich import inspect as rich_inspect
 
 from ota.core.settings import get_settings
 from ota.core.rpc import OdooRpc
-from ota.core.console import console
+from ota.core.console import console, COLUMNS
 from ota.core.tools import dataframe_to_table
 
 settings = get_settings()
@@ -32,9 +35,24 @@ def inspect(database, host, user, password, local):
 
     if not database.is_connected:
         console.log(f"Connection to {database} database failed.")
-        exit(1)
+        sys.exit(1)
+
+    console.log(f"Odoo Version: {database.odoo_version}")
 
     with console.status("Working..."):
+        for k, v in database.get_parameters():
+            console.log(f"{k}: {v}")
+
+        meta = database.get_meta()
+        console.print(
+            dataframe_to_table(
+                meta,
+                "Metadata",
+                ["name", "count"],
+                column_options=dict(name=COLUMNS.name, count=COLUMNS.primary_integer),
+            )
+        )
+
         apps, count = database.get_applications()
 
         options = {
@@ -69,10 +87,11 @@ def inspect(database, host, user, password, local):
         )
 
     applications = list(
-        set(modules["name"]).intersection(
+        set(apps["name"]).intersection(
             set(list(settings.models_by_applications.keys()))
         )
     )
+
     models = [
         v for k, v in settings.models_by_applications.items() if k in applications
     ]
@@ -88,10 +107,10 @@ def inspect(database, host, user, password, local):
             if k in ["total", "this_month", "this_week", "yesterday"]
         }
 
-        # console.print(tabulate(stats["by_day"], headers="keys"))
+        df = stats.get("top_creators")
+        if not isinstance(df, pd.DataFrame) or df.empty:
+            continue
 
-        df = stats["top_creators"]
-        df = df.astype(str)
         df.rename(columns={"create_uid": "name"}, inplace=True)
 
         console.print(
@@ -107,7 +126,8 @@ def inspect(database, host, user, password, local):
     df = df.transpose()
     df.reset_index(inplace=True)
     df.rename(columns={"index": "name"}, inplace=True)
-    df = df.astype(str)
+
+    total = df["total"].sum()
 
     col = {"justify": "center", "style": "green"}
     options = {
@@ -121,7 +141,7 @@ def inspect(database, host, user, password, local):
     console.print(
         dataframe_to_table(
             df,
-            "Records",
+            f"Records ({total})",
             ["name", "yesterday", "this_week", "this_month", "total"],
             column_options=options,
         )

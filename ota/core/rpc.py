@@ -9,6 +9,8 @@ def get_create_domain(start_date, end_date):
 
 
 class OdooRpc:
+    version: str = False
+
     def __init__(self, url, database, username, password):
         self.url = url
         self.db = database
@@ -26,11 +28,16 @@ class OdooRpc:
     def models(self):
         return xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/object")
 
+    @property
+    def odoo_version(self):
+        return self.version.get("server_serie", "0.0")
+
     def __str__(self) -> str:
         return f"<{self.db}>"
 
     def authenticate(self):
         try:
+            self.version = self.common.version()
             self.uid = self.common.authenticate(
                 self.db, self.username, self.password, {}
             )
@@ -75,14 +82,47 @@ class OdooRpc:
             {"fields": ["name", "shortdesc", "author"]},
         )
 
-    def get_records(self, model):
+    def get_parameters(self):
+        keys = [
+            "database.create_date",
+            "database.expiration_date",
+            "database.expiration_reason",
+            # "database.secret",
+            # "database.uuid",
+        ]
+
         res = self.execute(
-            "ir.module.module",
+            "ir.config_parameter",
             "search_read",
-            [["state", "=", "installed"]],
-            {"fields": ["name", "shortdesc"]},
+            [("key", "in", keys)],
+            {"fields": ["key", "value"]},
         )
+
+        res = {item["key"]: item["value"] for item in res}
+
+        return res.items()
+
+    def get_meta(self):
+        keys = {
+            "models": "ir.model",
+            "fields": "ir.model.fields",
+            "views": "ir.ui.view",
+            "menu": "ir.ui.menu",
+            "actions": "ir.actions.actions",
+            "act_server": "ir.actions.server",
+            "act_report": "ir.actions.report",
+            "cron": "ir.cron",
+            "automation": "base.automation",
+        }
+
+        # res = {k: self.execute(v, "search_count", []) for k, v in keys.items()}
+
+        res = [
+            {"name": k, "count": self.execute(v, "search_count", [])}
+            for k, v in keys.items()
+        ]
         df = pd.DataFrame(res)
+        # df.set_index("name", inplace=True)
 
         return df
 

@@ -154,7 +154,7 @@ def get_config_file():
 def humanize(string):
     """Humanize string"""
 
-    if "count" in string and len(string.split("count")) > 1:
+    if "count" in string and len(string.split("count")) > 2:
         string = string.replace("count", "")
 
     string = string.replace("_", " ")

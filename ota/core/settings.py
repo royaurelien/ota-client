@@ -29,11 +29,11 @@ class Settings(BaseSettings):
         "sale_management": "sale.order",
         "account": "account.move",
         "stock": "stock.picking",
-        # "account_accountant": "",
+        "account_accountant": "account.move",
         "purchase": "purchase.order",
         "crm": "crm.lead",
+        "documents": "documents.document",
         # "web_studio": "",
-        # "documents": "",
         # "hr_holidays": "",
         # "hr": "hr.employee",
         # "sign": "",
@@ -83,6 +83,7 @@ class Settings(BaseSettings):
                         data.pop(key)
                 self = cls.parse_raw(data)
 
+        self.save()
         return self
 
     def save(self):
@@ -108,6 +109,6 @@ class Settings(BaseSettings):
         return value
 
 
-@lru_cache()
+# @lru_cache()
 def get_settings():
     return Settings.load_from_json()
