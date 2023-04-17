@@ -1,5 +1,3 @@
-#!/bin/python3
-
 import click
 
 
@@ -15,25 +13,22 @@ settings = get_settings()
 @click.command()
 @click.argument("name")
 @click.argument("value")
-def set_value(name, value, **kwargs):
-    """Set settings value"""
+def set_value(name, value):
+    """Set attribute"""
     settings.set_value(name, value)
 
 
 @click.command()
 @click.argument("name")
-def get_value(name, **kwargs):
-    """Get settings value"""
+def get_value(name):
+    """Get attribute"""
     value = settings.get_value(name)
-    console.print(value)
+    console.print(f"{name} = {value}")
 
 
 @click.command()
-def view(**kwargs):
-    """View"""
-    # for k, v in settings.options._asdict().items():
-    #     print(f"{k}: {v}".format(k, v))
-
+def view():
+    """View configuration"""
     console.print(settings)
 
 

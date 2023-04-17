@@ -1,5 +1,3 @@
-#!/bin/python3
-
 import click
 
 
@@ -36,7 +34,7 @@ def download(id, format, **kwargs):
 
     local_download = kwargs.get("local", False)
     base_url = settings.url if not local_download else settings.local_url
-    url = urljoin(base_url, f"/v1/report/{id}")
+    url = urljoin(base_url, settings.api_report_url + f"/{id}")
 
     params = dict(ttype=format)
     template = kwargs.get("template")

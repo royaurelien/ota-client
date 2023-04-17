@@ -10,7 +10,7 @@ from pydantic import BaseSettings, validator
 from pydantic.error_wrappers import ValidationError
 
 from ota.core.console import console
-from ota.core.tools import load_from_json, get_config_file, save_to_json
+from ota.core.tools import load_from_json, get_config_file, save_to
 
 
 class Settings(BaseSettings):
@@ -18,6 +18,9 @@ class Settings(BaseSettings):
 
     url: str = "http://127.0.0.1:8080"
     local_url: str = "http://0.0.0.0:8080"
+    api_version: str = "v1"
+    api_report_url: str = f"/{api_version}/report"
+    api_analyze_url: str = f"/{api_version}/analyze"
     auth_enable: bool = False
     auth_method: str = None
     digits: int = 2
@@ -43,17 +46,12 @@ class Settings(BaseSettings):
     local_password = "admin"
 
     def get_local_credentials(self):
+        """Return local database credentials"""
         return (self.local_database, self.local_user, self.local_password)
-
-    @validator("threshold")
-    @classmethod  # Optional, but your linter may like it.
-    def check_storage_type(cls, value):
-        if not isinstance(value, float) and value > 0:
-            raise ValueError("Storage type can only be SSD or HDD.")
-        return value
 
     @classmethod
     def new_file(cls, save=True):
+        """Get defaults settings and save"""
         self = cls()
         if save:
             self.save()
@@ -62,12 +60,15 @@ class Settings(BaseSettings):
 
     @classmethod
     def load_from_json(cls):
+        """Load settings from JSON file"""
         filepath = get_config_file()
 
         if not os.path.exists(filepath):
             return cls.new_file()
 
-        data = load_from_json(filepath)
+        with open(filepath, "r") as file:
+            data = file.read()
+
         if not data:
             return cls.new_file()
 
@@ -85,23 +86,26 @@ class Settings(BaseSettings):
         return self
 
     def save(self):
+        """Save settings to JSON file"""
         data = self.json()
-        console.print(data)
         filepath = get_config_file()
-        save_to_json(filepath, data)
+
+        save_to(data, filepath)
 
     def set_value(self, name, value, auto_save=True):
+        """Set value"""
         self.__dict__[name] = value
 
         if auto_save:
             self.save()
 
     def get_value(self, name):
+        """Get value"""
         try:
             value = getattr(self, name)
         except AttributeError:
-            value = f"Unknown variable '{name}'"
-        return self.__dict__.get(name)
+            value = f"<Unknown variable '{name}'>"
+        return value
 
 
 @lru_cache()

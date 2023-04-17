@@ -26,7 +26,7 @@ except ImportError as error:
 # from ota.tools.odoo import run_odoo_analyse
 # from ota.tools.pylint import run_pylint, pylint_version
 from ota.core.tools import (
-    send_analysis,
+    post_json,
     now,
     save_to_json,
     save_to,
@@ -35,31 +35,34 @@ from ota.core.tools import (
     run_pylint,
     PYLINT_VERSION,
 )
-from ota.core.models import LinesOfCode
-from ota.odoo import Odoo
+from ota.core.models import LinesOfCode, LocalModule, LinterResult
+from ota.odoo import Odoo, ODOO_VERSION
 from ota.core.console import console
 
 
 class Analyze(object):
     __version__ = "0.1.0"
 
-    modules: list = []
+    path: str
+    name: str
+    to_exclude: list = []
+    to_keep: list = []
+    _modules: list = []
+    _odoo = None
+    _database = None
+    modules: str = []
     linter_by_modules: list = []
     linter = None
     stats = None
 
-    exec_time = 0.0
+    meta_odoo_version: str = False
+    meta_cloc_version: str = False
+    meta_linter_version: str = False
+    meta_create_date: str = False
+    meta_exec_time: float = False
 
-    def __init__(self, **kwargs):
-        self.path = ""
-        self.name = ""
-        self.to_exclude = []
-        self.to_keep = []
-
-        self._modules = []
-        self._odoo = None
-        self._database = None
-
+    def __init__(self, name, **kwargs):
+        self.name = name
         self.__dict__.update(kwargs)
 
     def scan_path(self):
@@ -91,7 +94,7 @@ class Analyze(object):
 
     @property
     def modules_count(self):
-        return len(self._modules)
+        return len(self._modules) if self._modules else len(self.modules)
 
     def count_lines_of_code(self):
         """Cout lines of code"""
@@ -105,13 +108,27 @@ class Analyze(object):
 
         header = data.pop("header")
         cloc_version = header.get("cloc_version", "0.0")
-        languages = list(filter(lambda item: item != "SUM", data.keys()))
+        df = pd.DataFrame(data)
+        df = df.loc[:, df.columns != "SUM"]
+        df.rename(columns={k: k.lower().capitalize() for k in df.columns}, inplace=True)
+
+        languages = list(df.columns)
+        df = df.transpose()
+
+        files = df["nFiles"].to_dict()
+        df = df.loc[:, df.columns != "nFiles"]
+        df["total"] = df["blank"] + df["comment"] + df["code"]
+
+        lines = df["code"].to_dict()
+        # df = df.transpose()
 
         obj = LinesOfCode(
             version=cloc_version,
             exec_time=(time.perf_counter() - start),
             languages=languages,
-            data=data,
+            lines=lines,
+            files=files,
+            data=df.to_dict(),
         )
 
         return obj
@@ -165,16 +182,13 @@ class Analyze(object):
         # Run once globally
         self.linter = run_pylint(self.path, recursive=True)
 
-        if self.modules_count > 1:
+        if self.modules_count:
             for mod in self.modules:
                 res = run_pylint(mod.path, name=mod.name)
 
                 # Set score on module
                 mod.score = res.score
                 self.linter_by_modules.append(res)
-        elif self.modules_count == 1:
-            self.modules[0].score = self.linter.score
-            self.linter_by_modules = [self.linter]
 
     def export(self):
         vals = {
@@ -183,20 +197,19 @@ class Analyze(object):
                 "modules_to_keep": self.to_keep,
                 "modules_to_exclude": self.to_exclude,
             },
-            "count_modules": self.modules_count,
+            "modules_count": self.modules_count,
             "path": self.path,
-            "stats": self.stats.data,
-            "languages": self.stats.languages,
+            "stats": vars(self.stats),
             "modules": {mod.name: vars(mod) for mod in self.modules},
             "linter_by_modules": {
                 mod.name: vars(mod) for mod in self.linter_by_modules
             },
             "linter": self.linter.get_summary(),
-            "meta_exec_time": self.exec_time,
-            "meta_create_date": now(),
-            "meta_linter_version": PYLINT_VERSION,
-            "meta_odoo_version": self._odoo.version,
-            "meta_cloc_version": self.stats.version,
+            "meta_exec_time": self.meta_exec_time,
+            "meta_create_date": self.meta_create_date or now(),
+            "meta_linter_version": self.meta_linter_version or PYLINT_VERSION,
+            "meta_odoo_version": self.meta_odoo_version or ODOO_VERSION,
+            "meta_cloc_version": self.meta_cloc_version or self.stats.version,
             "meta_ota_version": self.__version__,
         }
         # vals["modules"].update({mod.name: vars(mod) for mod in self.linter_by_modules})
@@ -212,38 +225,53 @@ class Analyze(object):
         self.load_modules()
         self.run_linter()
 
-        self.exec_time = time.perf_counter() - start
-
-        # # Prepare values to export
-        # self.data = {
-        #     "name": self.name,
-        #     "modules": modules,
-        #     "exclude": self.exclude,
-        #     "count_modules": len(modules),
-        #     "path": self.path,
-        #     "data": {
-        #         "analyze_cloc": cloc_data,
-        #         "analyze_odoo": odoo_analyse_data,
-        #         "analyze_pylint": pylint_data,
-        #     },
-        #     "execution_time": end - start,
-        #     "create_date": datetime.now().strftime("%Y%m%d %H:%M:%S"),
-        #     "pylint_version": pylint_version,
-        #     # 'odoo_analyse_version': Odoo.__version__,
-        # }
+        self.meta_exec_time = time.perf_counter() - start
 
     def save(self, filepath):
         save_to(self.export(), filepath)
 
-    def load(self, filepath):
+    @classmethod
+    def load(cls, filepath):
         data = load_from_json(filepath)
 
-        self.data = data
-        self.path = data.get("path")
-        self.name = data.get("name")
-        self.exclude = data.get("exclude")
+        version = data.get("meta_ota_version", False)
 
-    def send(self, url):
-        status_code, data = send_analysis(url, self.data)
+        if cls.__version__ != version:
+            raise NotImplementedError(
+                f"Load data from {version} version is not supported."
+            )
 
-        print(data.get("id"))
+        self = cls(data["name"])
+
+        attrs = [
+            "path",
+            "meta_exec_time",
+            "meta_create_date",
+            "meta_linter_version",
+            "meta_odoo_version",
+            "meta_cloc_version",
+        ]
+
+        self.__dict__.update({k: v for k, v in data.items() if k in attrs})
+        self.__dict__.update(
+            {
+                "to_keep": data.get("args", {}).get("modules_to_keep", []),
+                "to_exclude": data.get("args", {}).get("modules_to_exclude", []),
+            }
+        )
+
+        self.modules = [LocalModule(**vals) for vals in data["modules"].values()]
+        self.stats = LinesOfCode(**data["stats"])
+        self.linter = LinterResult(**{"name": "global", **data["linter"]})
+        self.linter_by_modules = [
+            LinterResult(**vals) for name, vals in data["linter_by_modules"].items()
+        ]
+
+        return self
+
+    # def send(self, url):
+    #     status_code, data = send_analysis(url, self.data)
+
+    #     console.log(status_code)
+
+    #     print(data.get("id"))

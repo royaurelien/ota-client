@@ -51,13 +51,25 @@ class Analysis(BaseModel):
 
 
 class LinesOfCode(BaseModel):
-    version: str
+    version: str = "0.0"
     exec_time: float
     languages: list
     data: dict
+    lines: dict
+    files: dict
+
+    @property
+    def languages_count(self):
+        return len(self.languages)
 
     def get_dataframe(self):
         return pd.DataFrame(self.data)
+
+    def get_summary(self):
+        def format(lang):
+            return f"{lang}: {self.lines[lang]} lines ({self.files[lang]})"
+
+        return [format(lang) for lang in self.languages]
 
 
 class LocalModule(BaseModel):
@@ -108,7 +120,7 @@ class LinterResult(BaseModel):
     stats: dict
     by_messages: dict
     messages: dict = {}
-    report: dict
+    report: dict = {}
     duplicates: list = []
 
     @property

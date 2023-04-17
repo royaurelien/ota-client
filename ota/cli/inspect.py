@@ -1,5 +1,3 @@
-#!/bin/python3
-
 import click
 import pandas as pd
 

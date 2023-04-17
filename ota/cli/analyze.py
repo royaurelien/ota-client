@@ -1,5 +1,3 @@
-#!/bin/python3
-
 import click
 
 
@@ -32,8 +30,8 @@ def analyze(path, name, save, verbose, exclude, modules, output):
 
     with console.status("Working..."):
         analysis = Analyze(
+            name,
             path=path,
-            name=name,
             to_keep=to_keep,
             to_exclude=to_exclude,
         )
@@ -58,7 +56,12 @@ def analyze(path, name, save, verbose, exclude, modules, output):
     if verbose:
         console.log(f"Analyze '{name}'")
         console.log(f"{analysis.modules_count} module(s) found.\n")
-        console.print(analysis.stats.get_dataframe())
+
+        df = analysis.stats.get_dataframe()
+
+        console.log(f"{analysis.stats.languages_count} languages:")
+        for item in analysis.stats.get_summary():
+            console.log("\t" + item)
 
         df = analysis.get_dataframe()
 
@@ -105,7 +108,8 @@ def analyze(path, name, save, verbose, exclude, modules, output):
 
         # Only one module, show linter messages
         if analysis.modules_count == 1:
-            df = analysis.linter.get_dataframe()
+            linter = analysis.linter_by_modules[0]
+            df = linter.get_dataframe()
 
             if not df.empty:
                 options = {
@@ -128,12 +132,12 @@ def analyze(path, name, save, verbose, exclude, modules, output):
                     )
                 )
 
-            if analysis.linter.has_duplicates:
+            if linter.has_duplicates:
                 console.print(
                     Panel.fit(
-                        f"Duplicates code ({analysis.linter.duplicates_count})",
+                        f"Duplicates code ({linter.duplicates_count})",
                         border_style="red",
                     )
                 )
-                for code in analysis.linter.duplicates:
+                for code in linter.duplicates:
                     console.print(code)

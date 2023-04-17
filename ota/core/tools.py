@@ -10,6 +10,9 @@ from io import StringIO
 import sys
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
+import logging
+
+import urllib3
 
 from pylint import __version__ as PYLINT_VERSION
 from pylint.lint import Run
@@ -28,11 +31,14 @@ from jinja2 import (
     PackageLoader,
     select_autoescape,
 )
+from rich import inspect
 
 # requests.packages.urllib3.disable_warnings()
 
 from ota.core.console import console, Table
 from ota.core.models import File, LinterResult
+
+_logger = logging.getLogger(__name__)
 
 
 def dict_to_list(data, keys=None):
@@ -182,16 +188,29 @@ def download_file(url, params=None):
                 file.write(chunk)
 
 
-def send_analysis(url, data):
-    """Post File"""
+def post_json(url, data):
+    """Post JSON File"""
+
+    status, data, message = False, None, None
+
     try:
-        response = requests.post(url, json=data, timeout=60)
-    except requests.exceptions.HTTPError as error:
-        console.log(error)
+        with requests.post(url, json=data, timeout=60) as response:
+            try:
+                response.raise_for_status()
+                status, data, message = response.status_code, response.json(), False
+            except requests.exceptions.HTTPError as error:
+                message = error
 
-        return (False, {})
+    except requests.exceptions.ConnectionError as error:
+        message = error
+    except requests.exceptions.Timeout:
+        message = "Timeout"
+    except requests.exceptions.TooManyRedirects:
+        message = "Too many redirects"
+    except requests.exceptions.RequestException as error:
+        message = error
 
-    return (response.status_code, response.json())
+    return (status, data, message)
 
 
 def dataframe_to_table(df, title, columns=[], **kwargs):

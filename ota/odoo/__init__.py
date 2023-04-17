@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-#!/bin/python3
-
 import logging
 from io import StringIO
 import json
 import sys
-import importlib.metadata
+from importlib import metadata
 
 
 # import odoo_analyse
@@ -24,13 +21,15 @@ from ota.core.models import LocalModule
 
 _logger = logging.getLogger(__name__)
 
+ODOO_VERSION = metadata.version("odoo_analyse")
+
 
 class Odoo(OOdoo):
     __output__ = None
 
-    @property
-    def version(self):
-        return importlib.metadata.version("odoo_analyse")
+    # @property
+    # def version(self):
+    #     return metadata.version("odoo_analyse")
 
     def load_path(self, paths, depth=None):
         """Overrided to replace Module"""
@@ -46,6 +45,7 @@ class Odoo(OOdoo):
     def _analyse_out_json(self, data, file_path):
         """Output the analyse result as JSON"""
 
+        # FIXME: overrided
         self.__output__ = data
 
     def export(self):
