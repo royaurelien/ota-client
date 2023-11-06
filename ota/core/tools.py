@@ -179,13 +179,13 @@ def download_file(url, params=None):
 def post_json(url, data):
     """Post JSON File"""
 
-    status, data, message = False, None, None
+    status, res, message = False, None, None
 
     try:
         with requests.post(url, json=data, timeout=60) as response:
             try:
                 response.raise_for_status()
-                status, data, message = response.status_code, response.json(), False
+                status, res, message = response.status_code, response.json(), False
             except requests.exceptions.HTTPError as error:
                 message = error
 
@@ -198,7 +198,7 @@ def post_json(url, data):
     except requests.exceptions.RequestException as error:
         message = error
 
-    return (status, data, message)
+    return (status, res, message)
 
 
 def dataframe_to_table(df, title, columns=[], **kwargs):

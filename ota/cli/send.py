@@ -1,12 +1,11 @@
 import sys
 import click
-
+import json
 
 from ota.core.settings import get_settings
 from ota.core.analyze import Analyze
 from ota.core.tools import urljoin, post_json
 from ota.core.console import console
-
 
 settings = get_settings()
 
@@ -28,8 +27,11 @@ def send(file, parseable, **kwargs):
     """Send report"""
     local_send = kwargs.get("local", False)
 
-    analysis = Analyze.load(file)
-    data = analysis.export()
+    # analysis = Analyze.load(file)
+    # data = analysis.export()
+
+    with open(file, mode="rt", encoding="utf-8") as f:
+        data = json.load(f)
 
     base_url = settings.url if not local_send else settings.local_url
 
@@ -38,7 +40,7 @@ def send(file, parseable, **kwargs):
         sys.exit(1)
 
     url = urljoin(base_url, settings.api_analyze_url)
-    status, data, msg = post_json(url, data)
+    status, resp, msg = post_json(url, data)
 
     if not status:
         if not parseable:
@@ -46,7 +48,7 @@ def send(file, parseable, **kwargs):
 
         sys.exit(1)
 
-    res_id = data.get("id")
+    res_id = resp.get("id")
 
     if not parseable:
         console.log(f"Analysis ID: {res_id}")
