@@ -2,7 +2,7 @@ import json
 import os
 import pkgutil
 import time
-
+import logging
 import pandas as pd
 import numpy as np
 
@@ -11,6 +11,7 @@ CLOC_WARNING = """
 Please install the cloc package first.
 Refer to https://github.com/AlDanial/cloc#install-via-package-manager
 """
+
 
 try:
     from sh import cloc
@@ -96,7 +97,8 @@ class Analyze(object):
         start = time.perf_counter()
 
         res = cloc([path, "--json"])
-        data = json.loads(res.stdout)
+        # sh==1.14.3, res.stdout
+        data = json.loads(res)
 
         header = data.pop("header")
         cloc_version = header.get("cloc_version", "0.0")

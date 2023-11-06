@@ -1,6 +1,7 @@
 from collections import namedtuple
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Tuple
 import pandas as pd
 
@@ -50,6 +51,8 @@ class LinesOfCode(BaseModel):
 
 
 class LocalModule(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     record_count: int = 0
     depends: list
     fields: int = 0
@@ -71,19 +74,19 @@ class LocalModule(BaseModel):
     views: dict
     records: dict
     files: list
-    # words: list
+    words: list
     hashsum: str
-    readme: str
-    readme_type: str = None
+    readme: bool
+    readme_type: Optional[str]
     info: dict
-    models_count: str
-    class_count: str
-    records_count: str
-    views_count: str
-    depends_count: str
-    PY: str
-    XML: str
-    JS: str
+    models_count: int
+    class_count: int
+    records_count: int
+    views_count: int
+    depends_count: int
+    PY: int
+    XML: int
+    JS: int
     missing_dependency: list = []
     score: float = 0.0
 

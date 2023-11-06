@@ -2,11 +2,11 @@ from functools import lru_cache
 import os
 
 from appdirs import AppDirs
-from pydantic import BaseSettings
-from pydantic.error_wrappers import ValidationError
+from pydantic_settings import BaseSettings
+from pydantic import ValidationError
 
 from ota.core.console import console
-from ota.core.tools import save_to
+from ota.core.tools import save_to, ROOT_DIR
 
 CONFIG_FILENAME = "config.json"
 DIRS = AppDirs("ota", "Aurelien ROY")
@@ -14,6 +14,7 @@ DIRS = AppDirs("ota", "Aurelien ROY")
 
 def init_dirs():
     os.makedirs(DIRS.user_data_dir, exist_ok=True)
+    console.log(ROOT_DIR)
 
 
 def get_config_path():
@@ -36,10 +37,10 @@ class Settings(BaseSettings):
     api_report_url: str = f"/{api_version}/report"
     api_analyze_url: str = f"/{api_version}/analyze"
     auth_enable: bool = False
-    auth_method: str = None
+    auth_method: None = None
     digits: int = 2
     threshold: float = 7.0
-    models_by_applications = {
+    models_by_applications: dict = {
         "sale_management": "sale.order",
         "account": "account.move",
         "stock": "stock.picking",
@@ -55,9 +56,9 @@ class Settings(BaseSettings):
         # "calendar": "",
         # "hr_contract": "",
     }
-    local_database = "http://localhost:8069"
-    local_user = "admin"
-    local_password = "admin"
+    local_database: str = "http://localhost:8069"
+    local_user: str = "admin"
+    local_password: str = "admin"
 
     def get_local_credentials(self):
         """Return local database credentials"""
@@ -100,11 +101,15 @@ class Settings(BaseSettings):
         self.save()
         return self
 
-    def save(self):
+    def save(self, clear=False):
         """Save settings to JSON file"""
         data = self.json()
+        filepath = get_config_filepath()
 
-        save_to(data, get_config_filepath())
+        if clear and os.path.exists(filepath):
+            os.remove(filepath)
+
+        save_to(data, filepath)
 
     def set_value(self, name, value, auto_save=True):
         """Set value"""

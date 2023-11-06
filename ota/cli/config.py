@@ -30,6 +30,12 @@ def view():
     console.print(settings)
 
 
+@click.command()
+def clear():
+    """Clear configuration"""
+    settings.save(True)
+
+
 @click.group()
 def config():
     """Manage configuration"""
@@ -38,3 +44,4 @@ def config():
 config.add_command(set_value)
 config.add_command(get_value)
 config.add_command(view)
+config.add_command(clear)

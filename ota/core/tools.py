@@ -1,29 +1,21 @@
 import ast
-from datetime import datetime
 import json
-import requests
-from urllib.parse import urljoin
-import re
-import os
-from pathlib import Path
-from io import StringIO
-import sys
-from datetime import datetime, date, timedelta
-from dateutil.relativedelta import relativedelta
 import logging
+import os
+import re
+import sys
+from datetime import date, datetime, timedelta
+from io import StringIO
+from pathlib import Path
+from urllib.parse import urljoin
 
-import urllib3
-
-from pylint import __version__ as PYLINT_VERSION
-from pylint.lint import Run
-from pylint.reporters.text import TextReporter
-from pylint.reporters import JSONReporter
-import pandas as pd
-from black import format_str, FileMode
-from black.parsing import InvalidInput
 import jinja2
-from jinja2.exceptions import UndefinedError
-
+import pandas as pd
+import requests
+import urllib3
+from black import FileMode, format_str
+from black.parsing import InvalidInput
+from dateutil.relativedelta import relativedelta
 from jinja2 import (
     ChoiceLoader,
     Environment,
@@ -31,14 +23,21 @@ from jinja2 import (
     PackageLoader,
     select_autoescape,
 )
+from jinja2.exceptions import UndefinedError
+from pylint import __version__ as PYLINT_VERSION
+from pylint.lint import Run
+from pylint.reporters import JSONReporter
+from pylint.reporters.text import TextReporter
+
+from ota.core.console import Table, console
+from ota.core.models import File, LinterResult
 
 # requests.packages.urllib3.disable_warnings()
 
-from ota.core.console import console, Table
-from ota.core.models import File, LinterResult
 
 _logger = logging.getLogger(__name__)
 
+ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 TEMPLATE_DIR = False
 
 
