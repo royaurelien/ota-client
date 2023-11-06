@@ -1,4 +1,5 @@
-#!/bin/python3
+# flake8: noqa=E402
+# pylint: disable=C0413
 
 import click
 
@@ -6,12 +7,13 @@ from ota.core.settings import get_settings
 
 settings = get_settings()  # pylint: disable=C0413
 
+from ota.cli.analyze import analyze
+from ota.cli.config import config
+from ota.cli.download import download
+
 # from ota.core.console import console, dataframe_to_table
 from ota.cli.inspect import inspect
-from ota.cli.config import config
-from ota.cli.analyze import analyze
 from ota.cli.send import send
-from ota.cli.download import download
 
 
 @click.group()

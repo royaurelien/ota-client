@@ -1,5 +1,5 @@
-from ota.odoo import OdooField
 from ota.core.tools import dict_to_list
+from ota.odoo import OdooField
 
 
 class Field(OdooField):

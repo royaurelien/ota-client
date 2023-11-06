@@ -1,9 +1,7 @@
 import click
 
-
-from ota.core.settings import get_settings
 from ota.core.console import console
-
+from ota.core.settings import get_settings
 
 settings = get_settings()
 

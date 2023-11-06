@@ -4,15 +4,13 @@ import logging
 import os
 import re
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from io import StringIO
 from pathlib import Path
-from urllib.parse import urljoin
 
 import jinja2
 import pandas as pd
 import requests
-import urllib3
 from black import FileMode, format_str
 from black.parsing import InvalidInput
 from dateutil.relativedelta import relativedelta
@@ -24,10 +22,8 @@ from jinja2 import (
     select_autoescape,
 )
 from jinja2.exceptions import UndefinedError
-from pylint import __version__ as PYLINT_VERSION
 from pylint.lint import Run
 from pylint.reporters import JSONReporter
-from pylint.reporters.text import TextReporter
 
 from ota.core.console import Table, console
 from ota.core.models import File, LinterResult
@@ -250,12 +246,12 @@ class JSONSetEncoder(json.JSONEncoder):
     def default(self, o):  # pylint: disable=E0202
         if isinstance(o, set):
             return list(o)
-        return super(JSONSetEncoder, self).default(o)
+        return super().default(o)
 
 
 def load_from_json(filepath):
     """Load JSON File from path"""
-    with open(filepath, "r") as file:
+    with open(filepath) as file:
         try:
             data = json.load(file)
         except json.decoder.JSONDecodeError:

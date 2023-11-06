@@ -1,11 +1,9 @@
 import ast
-import logging
 
+from ota.core.models import File
+from ota.core.tools import generate
 from ota.odoo import OdooModule
 from ota.odoo.model import Model
-from ota.core.tools import generate
-from ota.core.models import File
-
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 

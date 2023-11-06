@@ -1,9 +1,8 @@
 from collections import namedtuple
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
-from typing import Tuple
 import pandas as pd
+from pydantic import BaseModel, ConfigDict
 
 Columns = namedtuple(
     "Columns",

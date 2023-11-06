@@ -1,12 +1,14 @@
+# flake8: noqa=E402
+# pylint: disable=C0413
+
 import json
 import os
 import pkgutil
 import time
-import logging
-import pandas as pd
-import numpy as np
 
-# pylint: disable=C0413
+import numpy as np
+import pandas as pd
+
 CLOC_WARNING = """
 Please install the cloc package first.
 Refer to https://github.com/AlDanial/cloc#install-via-package-manager
@@ -15,25 +17,24 @@ Refer to https://github.com/AlDanial/cloc#install-via-package-manager
 
 try:
     from sh import cloc
-except ImportError as error:
+except ImportError:
     print(CLOC_WARNING)
     exit(1)
 
 
+from ota.core.models import LinesOfCode, LinterResult, LocalModule
 from ota.core.tools import (
+    PYLINT_VERSION,
+    load_from_json,
     now,
-    save_to_json,
+    run_pylint,
     save_to,
     to_json,
-    load_from_json,
-    run_pylint,
-    PYLINT_VERSION,
 )
-from ota.core.models import LinesOfCode, LocalModule, LinterResult
-from ota.odoo import Odoo, ODOO_VERSION
+from ota.odoo import ODOO_VERSION, Odoo
 
 
-class Analyze(object):
+class Analyze:
     __version__ = "0.1.0"
 
     path: str
@@ -147,7 +148,7 @@ class Analyze(object):
 
     @property
     def is_ok(self):
-        return set(k for k, v in self._odoo.items()) == set(self._modules)
+        return {k for k, v in self._odoo.items()} == set(self._modules)
 
     def get_dataframe(self):
         data = {mod.name: vars(mod) for mod in self.modules}

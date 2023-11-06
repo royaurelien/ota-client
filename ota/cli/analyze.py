@@ -1,12 +1,9 @@
 import click
 
-
-from ota.core.settings import get_settings
 from ota.core.analyze import Analyze
-from ota.core.tools import str_to_list, get_folder_name, dataframe_to_table
-
-from ota.core.console import console, Panel, COLUMNS
-
+from ota.core.console import COLUMNS, Panel, console
+from ota.core.settings import get_settings
+from ota.core.tools import dataframe_to_table, get_folder_name, str_to_list
 
 settings = get_settings()
 

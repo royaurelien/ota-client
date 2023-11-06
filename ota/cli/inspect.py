@@ -1,12 +1,11 @@
-import click
-import pandas as pd
 import sys
 
-from rich import inspect as rich_inspect
+import click
+import pandas as pd
 
-from ota.core.settings import get_settings
+from ota.core.console import COLUMNS, console
 from ota.core.rpc import OdooRpc
-from ota.core.console import console, COLUMNS
+from ota.core.settings import get_settings
 from ota.core.tools import dataframe_to_table
 
 settings = get_settings()

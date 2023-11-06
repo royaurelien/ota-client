@@ -1,12 +1,12 @@
-from functools import lru_cache
 import os
+from functools import lru_cache
 
 from appdirs import AppDirs
-from pydantic_settings import BaseSettings
 from pydantic import ValidationError
+from pydantic_settings import BaseSettings
 
 from ota.core.console import console
-from ota.core.tools import save_to, ROOT_DIR
+from ota.core.tools import ROOT_DIR, save_to
 
 CONFIG_FILENAME = "config.json"
 DIRS = AppDirs("ota", "Aurelien ROY")
@@ -81,7 +81,7 @@ class Settings(BaseSettings):
         if not os.path.exists(filepath):
             return cls.new_file()
 
-        with open(filepath, "r") as file:
+        with open(filepath) as file:
             data = file.read()
 
         if not data:

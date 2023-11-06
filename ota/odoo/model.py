@@ -1,9 +1,9 @@
 import ast
 
+from ota.core.models import File
+from ota.core.tools import generate, get_arg, get_assign, get_keyword
 from ota.odoo import OdooModel, get_ast_source_segment
 from ota.odoo.field import Field
-from ota.core.tools import generate, get_arg, get_keyword, get_assign
-from ota.core.models import File
 
 MANIFESTS = ["__manifest__.py", "__odoo__.py", "__openerp__.py"]
 MODEL_TYPES = ["AbstractModel", "TransientModel", "Model"]

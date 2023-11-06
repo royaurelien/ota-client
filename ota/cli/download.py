@@ -1,6 +1,5 @@
 import click
 
-
 from ota.core.settings import get_settings
 from ota.core.tools import download_file, urljoin
 

@@ -1,11 +1,11 @@
-import sys
-import click
 import json
+import sys
 
-from ota.core.settings import get_settings
-from ota.core.analyze import Analyze
-from ota.core.tools import urljoin, post_json
+import click
+
 from ota.core.console import console
+from ota.core.settings import get_settings
+from ota.core.tools import post_json, urljoin
 
 settings = get_settings()
 
@@ -30,7 +30,7 @@ def send(file, parseable, **kwargs):
     # analysis = Analyze.load(file)
     # data = analysis.export()
 
-    with open(file, mode="rt", encoding="utf-8") as f:
+    with open(file, encoding="utf-8") as f:
         data = json.load(f)
 
     base_url = settings.url if not local_send else settings.local_url
