@@ -7,6 +7,7 @@ import sys
 from datetime import date, datetime
 from io import StringIO
 from pathlib import Path
+from urllib.parse import urljoin
 
 import jinja2
 import pandas as pd
@@ -24,6 +25,9 @@ from jinja2 import (
 from jinja2.exceptions import UndefinedError
 from pylint.lint import Run
 from pylint.reporters import JSONReporter
+
+# from pylint.reporters.text import TextReporter
+from pylint import __version__ as PYLINT_VERSION
 
 from ota.core.console import Table, console
 from ota.core.models import File, LinterResult

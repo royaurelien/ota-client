@@ -1,6 +1,9 @@
 from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
 
 from ota.core.models import Columns
+
 
 console = Console()
 
@@ -12,3 +15,5 @@ COLUMNS = Columns(
     text_right={"justify": "right", "style": "cyan", "no_wrap": False},
     text_center={"justify": "center", "no_wrap": True},
 )
+
+__all__ = [console, Table, Panel, COLUMNS]
