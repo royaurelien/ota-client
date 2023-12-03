@@ -1,8 +1,8 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="ota",
-    version="0.1.3",
+    name="odoo-technical-analysis",
+    version="0.1.4",
     description="Odoo Technical Analysis",
     url="https://github.com/royaurelien/ota-client",
     author="Aurelien ROY",
