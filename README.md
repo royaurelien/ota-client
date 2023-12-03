@@ -3,14 +3,14 @@
 
 _**OTA** Command Line Tool_
 
-![PyPI](https://img.shields.io/pypi/v/ota) ![PyPI](https://img.shields.io/pypi/pyversions/ota)
+![PyPI](https://img.shields.io/pypi/v/odoo-technical-analysis) ![PyPI](https://img.shields.io/pypi/pyversions/odoo-technical-analysis)
 
 
 ## Installation
 
 Install from PyPI:
 ```bash
-pip install ota
+pip install odoo-technical-analysis
 ```
 
 ## Quickstart
