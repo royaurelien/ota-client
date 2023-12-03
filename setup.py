@@ -2,8 +2,10 @@ from setuptools import find_packages, setup
 
 setup(
     name="odoo-technical-analysis",
-    version="0.1.4",
+    version="0.1.5",
     description="Odoo Technical Analysis",
+    long_description=open("README.md", encoding="utf-8").read(),
+    long_description_content_type="text/markdown",
     url="https://github.com/royaurelien/ota-client",
     author="Aurelien ROY",
     author_email="roy.aurelien@gmail.com",
