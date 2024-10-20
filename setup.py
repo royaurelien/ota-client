@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="odoo-technical-analysis",
-    version="0.1.6",
+    version="0.1.7",
     description="Odoo Technical Analysis",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
@@ -29,9 +29,9 @@ setup(
     include_package_data=True,
     install_requires=[
         "click>=8.0.0",
-        "pylint-odoo>=8.0.19",
+        "pylint-odoo>=8.0",
         "pylint==2.15.5",
-        "odoo-analyse>=1.3.0",
+        "odoo-analyse==1.3.0",
         "requests",
         "sh>=2.0.0",
         "rich",
