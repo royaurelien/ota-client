@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="odoo-technical-analysis",
-    version="0.1.7",
+    version="0.1.8",
     description="Odoo Technical Analysis",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

@@ -14,7 +14,7 @@ DIRS = AppDirs("ota", "Aurelien ROY")
 
 def init_dirs():
     os.makedirs(DIRS.user_data_dir, exist_ok=True)
-    console.log(ROOT_DIR)
+    # console.log(ROOT_DIR)
 
 
 def get_config_path():

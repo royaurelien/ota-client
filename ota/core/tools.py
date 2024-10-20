@@ -39,6 +39,7 @@ _logger = logging.getLogger(__name__)
 
 ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
 TEMPLATE_DIR = False
+DEFAULT_TIMEOUT = 120
 
 
 def dict_to_list(data, keys=None):
@@ -158,7 +159,9 @@ def download_file(url, params=None):
     if not params:
         params = {}
 
-    with requests.get(url, params=params, stream=True, timeout=60) as response:
+    with requests.get(
+        url, params=params, stream=True, timeout=DEFAULT_TIMEOUT
+    ) as response:
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as error:
@@ -385,9 +388,11 @@ def run_pylint(path, **kwargs):
         vals.update(
             {
                 "messages": messages.to_dict(),
-                "duplicates": list(duplicate_code["msg"].values)
-                if not duplicate_code.empty
-                else [],
+                "duplicates": (
+                    list(duplicate_code["msg"].values)
+                    if not duplicate_code.empty
+                    else []
+                ),
             }
         )
 
