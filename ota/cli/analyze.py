@@ -41,6 +41,8 @@ def analyze(path, name, save, verbose, exclude, modules, output):
         analysis.run()
 
         if not analysis.is_ok:
+            console.log([k for k, v in analysis._odoo.items()])
+            console.log(analysis._modules)
             console.log("Modules are not equals.")
             exit(1)
 
